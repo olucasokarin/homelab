@@ -1,0 +1,18 @@
+[Unit]
+Description=Torrent Sniffer - Metadata Engine service
+After=network.target
+
+[Service]
+Type=simple
+User=olucas
+WorkingDirectory=/home/olucas/torrent-sniffer
+ExecStart=/home/olucas/torrent-sniffer/torrent-sniffer-linux-arm64
+Restart=on-failure
+RestartSec=5
+
+# Otimizações de limite para gerenciar a rede torrent
+LimitNOFILE=65535
+LimitNPROC=1024
+
+[Install]
+WantedBy=multi-user.target

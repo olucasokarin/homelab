@@ -1,0 +1,16 @@
+[Unit]
+Description=Rockchip Node Monitoring and Hardware Control Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=olucas
+WorkingDirectory=/home/olucas
+ExecStart=/home/olucas/rockchip-node-linux-arm64
+Restart=always
+RestartSec=5
+# Port used for the dashboard and API
+Environment=PORT=5000
+EnvironmentFile=/home/olucas/.env
+[Install]
+WantedBy=multi-user.target

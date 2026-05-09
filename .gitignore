@@ -1,0 +1,13 @@
+# Variáveis de Ambiente
+.env
+*.env
+
+# Binários e pacotes gerados nos scripts de deploy
+*.tar.gz
+*.exe
+bot-rockchip/telebot-linux-arm64
+node-rockchip/rockchip-node-linux-arm64
+
+# Pastas de resultados ou temporários
+result.json
+chunk_temp.srt

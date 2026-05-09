@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Home Server Dashboard</title>
+  <link rel="icon" type="image/svg+xml" href="favicon_geral.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0d0e12;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-hover: rgba(255, 255, 255, 0.1);
+      --primary: #6366f1;
+      --secondary: #ec4899;
+      --text-main: #ffffff;
+      --text-muted: #94a3b8;
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --accent-blue: #3b82f6;
+      --accent-purple: #8b5cf6;
+      --accent-green: #10b981;
+      --accent-orange: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+
+    header {
+      margin-bottom: 3rem;
+      text-align: center;
+      animation: fadeInDown 0.8s ease-out;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.2rem;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .network-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 30px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      user-select: none;
+    }
+
+    .network-badge:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .network-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 12px var(--accent-green);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .network-tailscale .network-dot {
+      background: var(--accent-blue);
+      box-shadow: 0 0 12px var(--accent-blue);
+    }
+
+    .toggle-hint {
+      font-size: 0.7rem;
+      color: rgba(255, 255, 255, 0.3);
+      margin-top: -0.5rem;
+    }
+
+    p.subtitle {
+      color: var(--text-muted);
+      font-weight: 300;
+      font-size: 1.1rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+    }
+
+    .section-title {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: "";
+      height: 1px;
+      flex-grow: 1;
+      background: linear-gradient(to right, var(--glass-border), transparent);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeInUp 0.6s ease-out backwards;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.05));
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      background: var(--card-hover);
+      border-color: rgba(255, 255, 255, 0.2);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s;
+    }
+
+    .card:hover .card-icon {
+      transform: scale(1.1);
+    }
+
+    .card-info h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-info p {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* Colors for icons */
+    .icon-blue {
+      color: var(--accent-blue);
+    }
+
+    .icon-purple {
+      color: var(--accent-purple);
+    }
+
+    .icon-green {
+      color: var(--accent-green);
+    }
+
+    .icon-orange {
+      color: var(--accent-orange);
+    }
+
+    .icon-pink {
+      color: var(--secondary);
+    }
+
+    .icon-indigo {
+      color: var(--primary);
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Status Indicators */
+    .status-indicator {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 20px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4b5563;
+    }
+
+    .status-online {
+      color: var(--accent-green);
+      border-color: rgba(16, 185, 129, 0.2);
+    }
+
+    .status-online .status-dot {
+      background: var(--accent-green);
+      box-shadow: 0 0 8px var(--accent-green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-offline {
+      color: #ef4444;
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .status-offline .status-dot {
+      background: #ef4444;
+    }
+
+    .status-checking {
+      color: var(--text-muted);
+    }
+
+    .status-checking .status-dot {
+      background: var(--text-muted);
+      animation: blink 1s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.2);
+        opacity: 0.7;
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 0.3;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    /* Staggered animation for cards */
+    .grid .card:nth-child(1) {
+      animation-delay: 0.1s;
+    }
+
+    .grid .card:nth-child(2) {
+      animation-delay: 0.15s;
+    }
+
+    .grid .card:nth-child(3) {
+      animation-delay: 0.2s;
+    }
+
+    .grid .card:nth-child(4) {
+      animation-delay: 0.25s;
+    }
+
+    .grid .card:nth-child(5) {
+      animation-delay: 0.3s;
+    }
+
+    .grid .card:nth-child(6) {
+      animation-delay: 0.35s;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 1rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Actions */
+    .card-actions {
+      border-top: 1px solid var(--glass-border);
+      padding-top: 1rem;
+      margin-top: auto; /* Push to bottom */
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Restart Button */
+    .restart-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0.4;
+      color: var(--text-muted);
+    }
+
+    .restart-btn:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: rotate(180deg) scale(1.1);
+      opacity: 1;
+      color: var(--accent-orange);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .stop-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      opacity: 0.4;
+      color: var(--text-muted);
+    }
+
+    .stop-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: rgba(239, 68, 68, 0.4);
+      opacity: 1;
+      color: #ef4444;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+      transform: scale(1.1);
+    }
+
+    /* Custom Alert Modal */
+    .alert-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .alert-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+    .alert-modal {
+      background: #1a1c23;
+      border: 1px solid var(--glass-border);
+      padding: 2rem;
+      border-radius: 1.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      animation: alertPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes alertPop {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    .alert-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .alert-message {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      user-select: text; /* Crucial for selectability */
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    .alert-message::-webkit-scrollbar { width: 6px; }
+    .alert-message::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+    
+    .alert-btn {
+      width: 100%;
+      padding: 0.8rem;
+      border-radius: 12px;
+      border: none;
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .alert-btn:hover {
+      filter: brightness(1.1);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <div class="header-controls">
+      <div id="network-status" class="network-badge" onclick="toggleNetwork()">
+        <span class="network-dot"></span>
+        <span id="active-ip">Detectando rede...</span>
+      </div>
+      <span class="toggle-hint">Clique para alternar rede manualmente</span>
+    </div>
+    <h1>Server Dashboard</h1>
+    <p class="subtitle">Gerenciamento Centralizado de Serviços</p>
+  </header>
+
+  <div class="container">
+
+    <div class="section-title">Energia e Sistema</div>
+    <div class="grid">
+      <a href="#" onclick="requestReboot(event)" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Sistema</span>
+        </div>
+        <div class="card-icon icon-orange">🔄</div>
+        <div class="card-info">
+          <h3>Reiniciar (Reboot)</h3>
+          <p>Reiniciar a Rock 3A</p>
+        </div>
+      </a>
+
+      <a href="#" onclick="requestStopAll(event)" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Sistema</span>
+        </div>
+        <div class="card-icon" style="color: #ef4444;">⏹️</div>
+        <div class="card-info">
+          <h3>Desligar Serviços</h3>
+          <p>Para Arr Stack, Torrents e I/O</p>
+        </div>
+      </a>
+
+      <a href="#" onclick="requestStartAll(event)" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Sistema</span>
+        </div>
+        <div class="card-icon" style="color: var(--accent-green);">▶️</div>
+        <div class="card-info">
+          <h3>Iniciar Serviços</h3>
+          <p>Subir Arr, Torrents e I/O</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-title">Serviços Base</div>
+    <div class="grid">
+      <a href="#" data-port="8096" data-service="jellyfin" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-purple">🎞️</div>
+        <div class="card-info">
+          <h3>Jellyfin</h3>
+          <p>Media Server & Streaming</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'jellyfin')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="#" data-port="9091" data-service="transmission" target="_blank" class="card"
+        referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-orange">⚡</div>
+        <div class="card-info">
+          <h3>Transmission</h3>
+          <p>Gerenciamento de Torrents</p>
+        </div>
+        <div class="card-actions">
+          <div class="stop-btn" onclick="requestStop(event, 'transmission')" title="Parar Serviço">⏹</div>
+          <div class="restart-btn" onclick="requestRestart(event, 'transmission')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="#" data-port="8080" data-service="qbittorrent" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-blue">🌊</div>
+        <div class="card-info">
+          <h3>qBittorrent</h3>
+          <p>Gerenciamento de Torrents</p>
+        </div>
+        <div class="card-actions">
+          <div class="stop-btn" onclick="requestStop(event, 'qbittorrent')" title="Parar Serviço">⏹</div>
+          <div class="restart-btn" onclick="requestRestart(event, 'qbittorrent')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="/sys.html" data-service="rockchip-node" target="_self" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Local</span>
+        </div>
+        <div class="card-icon icon-blue">🚀</div>
+        <div class="card-info">
+          <h3>Rockchip Node</h3>
+          <p>System & Hardware Control</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'rockchip-node')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="/logs.html" target="_self" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Local</span>
+        </div>
+        <div class="card-icon icon-green">📜</div>
+        <div class="card-info">
+          <h3>Central de Logs</h3>
+          <p>Visualizador interativo</p>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-title">Arr Stack</div>
+    <div class="grid">
+      <a href="#" data-port="8989" data-service="sonarr" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-blue">📺</div>
+        <div class="card-info">
+          <h3>Sonarr</h3>
+          <p>Séries e TV Shows</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'sonarr')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="#" data-port="7878" data-service="radarr" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-pink">🎬</div>
+        <div class="card-info">
+          <h3>Radarr</h3>
+          <p>Filmes e Cinema</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'radarr')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="#" data-port="6767" data-service="bazarr" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-indigo">📝</div>
+        <div class="card-info">
+          <h3>Bazarr</h3>
+          <p>Legendas e Subtitles</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'bazarr')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+
+      <a href="#" data-port="9696" data-service="prowlarr" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-orange">🔍</div>
+        <div class="card-info">
+          <h3>Prowlarr</h3>
+          <p>Indexadores e Busca</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'prowlarr')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-title">Automação e Download</div>
+    <div class="grid">
+      <a href="/telebot.html" target="_self" class="card" id="telebot-card" data-port="5001"
+        data-service="rockchip-bot">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-pink">🤖</div>
+        <div class="card-info">
+          <h3>TeleBot Downloader</h3>
+          <p>Status de Downloads e Fila</p>
+        </div>
+        <div class="card-actions">
+          <div class="stop-btn" onclick="requestStop(event, 'rockchip-bot')" title="Parar Serviço">⏹</div>
+          <div class="restart-btn" onclick="requestRestart(event, 'rockchip-bot')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+      <a href="#" target="_blank" class="card" data-port="8082" data-service="telegram-bot-api"
+        referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-blue">🐳</div>
+        <div class="card-info">
+          <h3>Telegram Bot API</h3>
+          <p>Motor de Download (Docker)</p>
+        </div>
+        <div class="card-actions">
+          <div class="restart-btn" onclick="requestRestart(event, 'telegram-bot-api')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+      <a href="#" data-port="8081" data-service="torrent-sniffer" target="_blank" class="card" referrerpolicy="no-referrer">
+        <div class="status-indicator status-checking">
+          <span class="status-dot"></span>
+          <span class="status-text">Sondando</span>
+        </div>
+        <div class="card-icon icon-green">🔎</div>
+        <div class="card-info">
+          <h3>Torrent Sniffer</h3>
+          <p>Análise Prévia de Torrents</p>
+        </div>
+        <div class="card-actions">
+          <div class="stop-btn" onclick="requestStop(event, 'torrent-sniffer')" title="Parar Serviço">⏹</div>
+          <div class="restart-btn" onclick="requestRestart(event, 'torrent-sniffer')" title="Reiniciar Serviço">↺</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="section-title">Gestão de Biblioteca</div>
+    <div class="grid">
+      <a href="/movies.html" target="_self" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Biblioteca</span>
+        </div>
+        <div class="card-icon icon-purple">🍿</div>
+        <div class="card-info">
+          <h3>CineRock Library</h3>
+          <p>Filmes, Séries e Qualidade Técnica</p>
+        </div>
+      </a>
+      <a href="/cleanup.html" target="_self" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Analítico</span>
+        </div>
+        <div class="card-icon icon-orange">🧹</div>
+        <div class="card-info">
+          <h3>Limpeza de Mídia</h3>
+          <p>Sugestões baseadas em visualização</p>
+        </div>
+      </a>
+      <a href="/profiles.html" target="_self" class="card">
+        <div class="status-indicator status-online">
+          <span class="status-dot"></span>
+          <span class="status-text">Analítico</span>
+        </div>
+        <div class="card-icon" style="color: #a78bfa;">🌈</div>
+        <div class="card-info">
+          <h3>Perfis HDR & Cor</h3>
+          <p>Dolby Vision, HDR10, Bit Depth</p>
+        </div>
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Configuração de IPs
+    const LOCAL_IP = '192.168.1.110';
+    const TAILSCALE_IP = '100.117.163.14';
+    const TEST_PORT = '5000';
+
+    let currentHost = LOCAL_IP;
+
+    async function probeConnectivity(host, port = TEST_PORT) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+      try {
+        // Usamos fetch com no-cors para testar apenas a abertura da porta
+        await fetch(`http://${host}:${port}`, { mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timeoutId);
+        return true;
+      } catch (e) {
+        // Se o erro for abort ou connection refused, consideramos offline
+        return false;
+      }
+    }
+
+    async function checkHealth(card) {
+      const port = card.getAttribute('data-port');
+      const indicator = card.querySelector('.status-indicator');
+      const text = card.querySelector('.status-text');
+
+      if (!port) return;
+
+      const isOnline = await probeConnectivity(currentHost, port);
+
+      indicator.classList.remove('status-checking', 'status-online', 'status-offline');
+      if (isOnline) {
+        indicator.classList.add('status-online');
+        text.innerText = 'Online';
+      } else {
+        indicator.classList.add('status-offline');
+        text.innerText = 'Offline';
+      }
+    }
+
+    function updateAllHealth() {
+      document.querySelectorAll('.card').forEach(card => {
+        checkHealth(card);
+      });
+    }
+
+    function toggleNetwork() {
+      // Alterna manualmente entre os dois IPs
+      const newHost = currentHost === LOCAL_IP ? TAILSCALE_IP : LOCAL_IP;
+      applyNetwork(newHost);
+    }
+
+    function applyNetwork(host) {
+      currentHost = host;
+      const statusText = document.getElementById('active-ip');
+      const statusBadge = document.getElementById('network-status');
+
+      const isTailscale = host === TAILSCALE_IP;
+      statusText.innerText = isTailscale ? `Forçando Tailscale: ${host}` : `Forçando Local: ${host}`;
+
+      if (isTailscale) {
+        statusBadge.classList.add('network-tailscale');
+      } else {
+        statusBadge.classList.remove('network-tailscale');
+      }
+
+      // Atualiza os links dos cards (ignora links internos como /telebot.html)
+      document.querySelectorAll('.card').forEach(card => {
+        const port = card.getAttribute('data-port');
+        const href = card.getAttribute('href');
+        if (port && href && !href.startsWith('/')) {
+          card.href = `http://${host}:${port}`;
+        }
+      });
+
+      console.log(`Rede alterada manualmente para: ${host}`);
+
+      // Reinicia verificação de saúde com o novo IP
+      updateAllHealth();
+    }
+
+    async function initNetwork() {
+      const hostname = window.location.hostname;
+      const statusText = document.getElementById('active-ip');
+
+      // Se acessou por um IP específico via URL, respeita e inicia com ele
+      if (hostname === TAILSCALE_IP || hostname === LOCAL_IP) {
+        currentHost = hostname;
+      } else {
+        // Se abriu via file:// ou localhost, faz o probe inteligente
+        statusText.innerText = "Sondando rede...";
+        const isTailscaleUp = await probeConnectivity(TAILSCALE_IP);
+        currentHost = isTailscaleUp ? TAILSCALE_IP : LOCAL_IP;
+      }
+
+      applyNetwork(currentHost);
+
+      // Ativa efeito de brilho nos cards e inicia health check
+      document.querySelectorAll('.card').forEach(card => {
+        card.onmousemove = e => {
+          const rect = card.getBoundingClientRect();
+          card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+          card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        };
+      });
+
+      // Inicia loop de atualização (cada 10 segundos)
+      setInterval(updateAllHealth, 10000);
+    }
+
+    async function requestReboot(event) {
+      event.preventDefault();
+      if (!confirm("⚠️ Tem certeza que deseja REINICIAR a Rock 3A agora? Todos os serviços ficarão offline por alguns instantes.")) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`http://${currentHost}:5000/reboot`, {
+          method: 'POST'
+        });
+        if (response.ok) {
+          showAlert("🚀 Sucesso", "Comando de reboot enviado! O dashboard ficará offline em breve.");
+          setTimeout(() => location.reload(), 5000);
+        } else {
+          const err = await response.text();
+          showAlert("❌ Erro", "Erro ao reiniciar: " + err);
+        }
+      } catch (e) {
+        // O erro é esperado se a conexão cair imediatamente
+        showAlert("🚀 Sucesso", "Comando de reboot enviado! A conexão deve cair agora.");
+      }
+    }
+
+    async function requestRestart(event, serviceName) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      const card = event.currentTarget.closest('.card');
+      const indicator = card.querySelector('.status-indicator');
+      const text = card.querySelector('.status-text');
+
+      if (!confirm(`⚠️ Deseja reiniciar o serviço "${serviceName}"?`)) {
+        return;
+      }
+
+      // Feedback visual imediato
+      indicator.classList.remove('status-online', 'status-offline');
+      indicator.classList.add('status-checking');
+      text.innerText = 'Reiniciando...';
+
+      try {
+        const response = await fetch(`http://${currentHost}:5000/restart?service=${serviceName}`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          showAlert(`✅ Sucesso`, `Serviço ${serviceName} reiniciado com sucesso!`);
+          // Aguarda um pouco antes de sondar novamente
+          setTimeout(() => checkHealth(card), 3000);
+        } else {
+          const err = await response.text();
+          showAlert(`❌ Erro`, `Erro ao reiniciar ${serviceName}: ` + err);
+          checkHealth(card);
+        }
+      } catch (e) {
+        showAlert(`❌ Erro`, `Erro de conexão ao tentar reiniciar ${serviceName}.`);
+        checkHealth(card);
+      }
+    }
+
+    async function requestStop(event, serviceName) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      const card = event.currentTarget.closest('.card');
+      const indicator = card.querySelector('.status-indicator');
+      const text = card.querySelector('.status-text');
+
+      if (!confirm(`⚠️ Deseja PARAR o serviço "${serviceName}"? Ele ficará offline até ser reiniciado manualmente.`)) {
+        return;
+      }
+
+      indicator.classList.remove('status-online', 'status-offline');
+      indicator.classList.add('status-checking');
+      text.innerText = 'Parando...';
+
+      try {
+        const response = await fetch(`http://${currentHost}:5000/stop?service=${serviceName}`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          indicator.classList.remove('status-checking');
+          indicator.classList.add('status-offline');
+          text.innerText = 'Parado';
+          showAlert(`⏹ Sucesso`, `Serviço ${serviceName} parado com sucesso.`);
+        } else {
+          const err = await response.text();
+          showAlert(`❌ Erro`, `Erro ao parar ${serviceName}: ` + err);
+          checkHealth(card);
+        }
+      } catch (e) {
+        showAlert(`❌ Erro`, `Erro de conexão ao tentar parar ${serviceName}.`);
+        checkHealth(card);
+      }
+    }
+
+    async function requestStopAll(event) {
+      event.preventDefault();
+      const services = [
+        { name: 'arr-stack', label: 'Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)' },
+        { name: 'transmission', label: 'Transmission' },
+        { name: 'qbittorrent', label: 'qBittorrent' },
+        { name: 'torrent-sniffer', label: 'Torrent Sniffer' },
+        { name: 'rockchip-bot', label: 'TeleBot Downloader' },
+      ];
+
+      const serviceList = services.map(s => `  • ${s.label}`).join('\n');
+      if (!confirm(`⚠️ Deseja PARAR todos os serviços pesados?\n\n${serviceList}\n\nIsso irá desligar o arr stack, os torrent clients e os programas que leem o HD constantemente.`)) {
+        return;
+      }
+
+      let results = [];
+      for (const svc of services) {
+        try {
+          const r = await fetch(`http://${currentHost}:5000/stop?service=${svc.name}`, { method: 'POST' });
+          if (r.ok) {
+            results.push(`✅ ${svc.label}`);
+          } else {
+            const err = await r.text();
+            results.push(`❌ ${svc.label}: ${err}`);
+          }
+        } catch (e) {
+          results.push(`❌ ${svc.label}: erro de conexão`);
+        }
+      }
+
+      showAlert('Resultado', results.join('\n'));
+      updateAllHealth();
+    }
+
+    async function requestStartAll(event) {
+      event.preventDefault();
+      const services = [
+        { name: 'arr-stack', label: 'Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)' },
+        { name: 'transmission', label: 'Transmission' },
+        { name: 'qbittorrent', label: 'qBittorrent' },
+        { name: 'torrent-sniffer', label: 'Torrent Sniffer' },
+        { name: 'rockchip-bot', label: 'TeleBot Downloader' },
+      ];
+
+      const serviceList = services.map(s => `  • ${s.label}`).join('\n');
+      if (!confirm(`⚠️ Deseja INICIAR todos os serviços?\n\n${serviceList}`)) {
+        return;
+      }
+
+      let results = [];
+      for (const svc of services) {
+        try {
+          const r = await fetch(`http://${currentHost}:5000/start?service=${svc.name}`, { method: 'POST' });
+          if (r.ok) {
+            results.push(`✅ ${svc.label}`);
+          } else {
+            const err = await r.text();
+            results.push(`❌ ${svc.label}: ${err}`);
+          }
+        } catch (e) {
+          results.push(`❌ ${svc.label}: erro de conexão`);
+        }
+      }
+
+      showAlert('Resultado', results.join('\n'));
+      updateAllHealth();
+    }
+
+    initNetwork();
+
+    // Custom Alert Logic
+    function showAlert(title, message) {
+      const overlay = document.getElementById('alert-overlay');
+      document.getElementById('alert-title').innerText = title;
+      document.getElementById('alert-message').innerText = message;
+      overlay.classList.add('active');
+    }
+
+    function closeAlert() {
+      document.getElementById('alert-overlay').classList.remove('active');
+    }
+  </script>
+
+  <div id="alert-overlay" class="alert-overlay" onclick="if(event.target===this)closeAlert()">
+    <div class="alert-modal">
+      <div id="alert-title" class="alert-title"></div>
+      <div id="alert-message" class="alert-message"></div>
+      <button class="alert-btn" onclick="closeAlert()">Entendido</button>
+    </div>
+  </div>
+</body>
+
+</html>

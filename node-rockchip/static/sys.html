@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rockchip Node Control</title>
+  <link rel="icon" type="image/svg+xml" href="favicon_saude.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090d;
+      --surface: rgba(17, 18, 27, 0.7);
+      --surface-high: rgba(28, 30, 43, 0.8);
+      --border: rgba(255, 255, 255, 0.07);
+      --border-bright: rgba(255, 255, 255, 0.14);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --primary: #6366f1;
+      --blue: #3b82f6;
+      --pink: #ec4899;
+      --purple: #8b5cf6;
+      --orange: #f59e0b;
+      --cyan: #06b6d4;
+      --text: #f1f5f9;
+      --muted: #64748b;
+      --muted-light: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      background-image:
+        radial-gradient(ellipse at 0% 0%, rgba(99, 102, 241, 0.12) 0%, transparent 55%),
+        radial-gradient(ellipse at 100% 100%, rgba(16, 185, 129, 0.08) 0%, transparent 55%);
+      background-attachment: fixed;
+    }
+
+    .dashboard {
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    /* ── Header ── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(100deg, #fff 40%, #6366f1);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo span {
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 18px;
+      border-radius: 99px;
+      border: 1px solid var(--border-bright);
+      background: var(--surface);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      transition: all 0.4s;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: all 0.4s;
+    }
+
+    .status-pill.online {
+      color: var(--success);
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .status-pill.online .status-dot {
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    .status-pill.offline {
+      color: var(--danger);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .status-pill.offline .status-dot {
+      background: var(--danger);
+    }
+
+    .last-updated {
+      font-size: 0.75rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ── Grid ── */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .grid-accelerators {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .span-all {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 1000px) {
+      .grid-accelerators {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 900px) {
+      .grid-3 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+
+      .grid-3,
+      .grid-2,
+      .grid-accelerators {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      padding: 1.25rem 1.5rem;
+      backdrop-filter: blur(16px);
+      transition: border-color 0.3s;
+      animation: fadeIn 0.4s ease backwards;
+    }
+
+    .card:hover {
+      border-color: var(--border-bright);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1.25rem;
+    }
+
+    .card-icon {
+      font-size: 1rem;
+      opacity: 0.8;
+    }
+
+    .card-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted-light);
+      font-weight: 600;
+    }
+
+    /* ── Gauge ── */
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .gauge-svg {
+      width: 160px;
+      height: 80px;
+      overflow: visible;
+    }
+
+    .gauge-text {
+      text-anchor: middle;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* ── Proc lists ── */
+    .proc-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .proc-table th {
+      text-align: left;
+      color: var(--muted);
+      padding: 8px;
+      font-weight: 600;
+      border-bottom: 1px solid var(--border);
+      text-transform: uppercase;
+      font-size: 0.65rem;
+    }
+
+    .proc-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      color: var(--muted-light);
+    }
+
+    .proc-pid {
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0.5;
+      width: 50px;
+    }
+
+    .proc-name {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .proc-val {
+      font-family: 'JetBrains Mono', monospace;
+      text-align: right;
+    }
+
+    .self-badge {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 10px 15px;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+    }
+
+    .self-label {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .self-stats {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    /* ── Bars ── */
+    .bar-wrap {
+      position: relative;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 8px 0 4px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ── Section Title ── */
+    .section-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin: 2rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Memory Grid ── */
+    .mem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .mem-item-val {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* ── Log Buttons ── */
+    .log-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .log-btn:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+    }
+
+    .log-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ── Colors ── */
+    .c-green {
+      color: var(--success);
+    }
+
+    .c-primary {
+      color: var(--primary);
+    }
+
+    .c-blue {
+      color: var(--blue);
+    }
+
+    .c-cyan {
+      color: var(--cyan);
+    }
+
+    .c-white {
+      color: var(--text);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: scale(1.3);
+        opacity: 0.6;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-content {
+      background: var(--surface-high);
+      border: 1px solid var(--border);
+      border-radius: 1rem;
+      width: 90%;
+      max-width: 600px;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+      transform: translateY(20px);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: color 0.2s;
+    }
+
+    .modal-close:hover {
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 1.25rem 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .storage-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+
+    .storage-item.clickable {
+      cursor: pointer;
+    }
+
+    .storage-item.clickable:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .storage-item:last-child {
+      border-bottom: none;
+    }
+
+    .storage-name {
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      word-break: break-word;
+      padding-right: 15px;
+    }
+
+    .storage-size {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--primary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .loader {
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      animation: spin 1s linear infinite;
+      margin: 20px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard">
+
+    <header>
+      <div class="logo">
+        <div style="margin-bottom: 15px;">
+          <a href="/" style="color: var(--primary); text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-flex; align-items: center; gap: 5px;">
+            <span style="font-size: 1.2rem;">←</span> Voltar para Dashboard Central
+          </a>
+        </div>
+        <h1>Rockchip Node Control</h1>
+        <span>Radxa Rock 3A · RK3568 · <span id="app-version">--</span></span>
+      </div>
+      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px">
+        <div id="status-pill" class="status-pill"><span class="status-dot"></span><span
+            id="status-text">Conectando...</span></div>
+        <span class="last-updated" id="last-update">--</span>
+      </div>
+    </header>
+
+    <div class="self-badge" id="self-usage">
+      <span class="self-label">Self-Monitor: Rockchip Node</span>
+      <span class="self-stats" id="self-stats">-- MB | --% CPU</span>
+    </div>
+    <div class="self-badge" id="bot-status-badge" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.2); margin-top: -0.5rem; display: flex; cursor: pointer; justify-content: space-between;" onclick="window.location.href='/telebot.html'">
+      <span class="self-label" style="color: var(--primary); display: flex; align-items: center; gap: 8px;">
+        <span class="status-dot" id="bot-dot" style="width: 8px; height: 8px; background: var(--muted);"></span>
+        TeleBot
+        <span id="bot-stats-job" style="margin-left:8px; font-weight: 300; opacity: 0.8; font-family: monospace;">-- Ativos • -- Fila</span>
+      </span>
+      <span class="self-stats" id="bot-stats-hw" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">-- MB | --% CPU</span>
+    </div>
+    <div class="self-badge" id="sniffer-status-badge" style="background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.2); margin-top: -0.5rem; display: flex; cursor: pointer; justify-content: space-between;" onclick="window.location.href='http://'+location.hostname+':8081'">
+      <span class="self-label" style="color: var(--success); display: flex; align-items: center; gap: 8px;">
+        <span class="status-dot" id="sniffer-dot" style="width: 8px; height: 8px; background: var(--muted);"></span>
+        Torrent Sniffer
+        <span id="sniffer-stats-job" style="margin-left:8px; font-weight: 300; opacity: 0.8; font-family: monospace;">-- Ativos</span>
+      </span>
+      <span class="self-stats" id="sniffer-stats-hw" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">-- MB | --% CPU</span>
+    </div>
+
+    <!-- MAIN ROW: CPU | TEMP | RAM -->
+    <div class="grid-3">
+      <!-- CPU -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">⚙️</span><span class="card-title">Uso de CPU</span></div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 160 80">
+            <path d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14"
+              stroke-linecap="round" />
+            <path id="cpu-gauge-fill" d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="var(--primary)"
+              stroke-width="14" stroke-linecap="round" stroke-dasharray="219.9 219.9" stroke-dashoffset="219.9" />
+            <text id="cpu-text" x="80" y="72" class="gauge-text" fill="var(--text)">--%</text>
+          </svg>
+          <span class="stat-label" id="cpu-cores">-- núcleos</span>
+        </div>
+      </div>
+
+      <!-- TEMP -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🌡️</span><span class="card-title">Temp. Principal</span></div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 160 80">
+            <path d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14"
+              stroke-linecap="round" />
+            <path id="temp-gauge-fill" d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="var(--success)"
+              stroke-width="14" stroke-linecap="round" stroke-dasharray="219.9 219.9" stroke-dashoffset="219.9" />
+            <text id="temp-text" x="80" y="72" class="gauge-text" fill="var(--text)">--°C</text>
+          </svg>
+          <span class="stat-label" id="temp-zone-name">SoC</span>
+        </div>
+      </div>
+
+      <!-- RAM -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🧠</span><span class="card-title">Memória RAM</span></div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 160 80">
+            <path d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="rgba(255,255,255,0.07)" stroke-width="14"
+              stroke-linecap="round" />
+            <path id="ram-gauge-fill" d="M 10 75 A 70 70 0 0 1 150 75" fill="none" stroke="var(--blue)"
+              stroke-width="14" stroke-linecap="round" stroke-dasharray="219.9 219.9" stroke-dashoffset="219.9" />
+            <text id="ram-text" x="80" y="72" class="gauge-text" fill="var(--text)">--%</text>
+          </svg>
+          <span class="stat-label" id="ram-label">-- / -- MB</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACCELERATORS: GPU | VDEC | VENC | NPU -->
+    <div class="section-title">Aceleradores de Hardware (RKMPP)</div>
+    <div class="grid-accelerators">
+      <!-- GPU -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🎮</span><span class="card-title">GPU</span></div>
+        <div style="font-size: 1.5rem; font-weight: 700;" id="gpu-val">--%</div>
+        <div class="bar-wrap">
+          <div id="gpu-bar" class="bar-fill" style="background:var(--pink); width:0%"></div>
+        </div>
+      </div>
+      <!-- VDEC -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🎬</span><span class="card-title">VDec</span></div>
+        <div style="font-size: 1.5rem; font-weight: 700;" id="vdec-val">--%</div>
+        <div class="bar-wrap">
+          <div id="vdec-bar" class="bar-fill" style="background:var(--cyan); width:0%"></div>
+        </div>
+      </div>
+      <!-- VENC -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">📽️</span><span class="card-title">VEnc</span></div>
+        <div style="font-size: 1.5rem; font-weight: 700;" id="venc-val">--%</div>
+        <div class="bar-wrap">
+          <div id="venc-bar" class="bar-fill" style="background:var(--orange); width:0%"></div>
+        </div>
+      </div>
+      <!-- NPU -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🤖</span><span class="card-title">NPU</span></div>
+        <div style="font-size: 1.5rem; font-weight: 700;" id="npu-val">--%</div>
+        <div class="bar-wrap">
+          <div id="npu-bar" class="bar-fill" style="background:var(--purple); width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECONDARY: THERMALS | MEM DETAILS -->
+    <div class="grid-2">
+      <!-- Thermals -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">🔥</span><span class="card-title">Zonas Térmicas</span></div>
+        <div id="thermal-list" style="display:flex; flex-direction:column; gap:10px"></div>
+      </div>
+      <!-- Mem Details -->
+      <div class="card">
+        <div class="card-header"><span class="card-icon">📊</span><span class="card-title">DMC & RAM Detalhada</span>
+        </div>
+        <div class="mem-grid">
+          <div>
+            <div class="card-title" style="font-size:0.6rem">Controlador (DMC)</div>
+            <div class="mem-item-val c-cyan" id="dmc-val">--%</div>
+          </div>
+          <div>
+            <div class="card-title" style="font-size:0.6rem">Cache</div>
+            <div class="mem-item-val c-blue" id="mem-cache">-- MB</div>
+          </div>
+          <div>
+            <div class="card-title" style="font-size:0.6rem">Usado</div>
+            <div class="mem-item-val c-white" id="mem-used">-- MB</div>
+          </div>
+          <div>
+            <div class="card-title" style="font-size:0.6rem">Livre</div>
+            <div class="mem-item-val c-green" id="mem-free">-- MB</div>
+          </div>
+        </div>
+        <div class="bar-wrap" style="margin-top:10px">
+          <div id="dmc-bar" class="bar-fill" style="background:var(--cyan); width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STORAGE: FULL WIDTH -->
+    <div class="section-title">Armazenamento</div>
+    <div class="grid-2 span-all">
+      <div class="card span-all">
+        <div id="disk-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px">
+        </div>
+      </div>
+    </div>
+
+    <!-- I/O HEALTH -->
+    <div class="section-title">Saúde I/O</div>
+    <div class="grid-2 span-all">
+      <div class="card span-all">
+        <div id="io-health-list" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:15px">
+        </div>
+      </div>
+    </div>
+
+    <!-- PROCESSES -->
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top CPU</span></div>
+        <table class="proc-table">
+          <thead>
+            <tr>
+              <th class="proc-pid">PID</th>
+              <th>PROCESSO</th>
+              <th style="text-align:right">CPU%</th>
+            </tr>
+          </thead>
+          <tbody id="top-cpu-list"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top RAM</span></div>
+        <table class="proc-table">
+          <thead>
+            <tr>
+              <th class="proc-pid">PID</th>
+              <th>PROCESSO</th>
+              <th style="text-align:right">MB</th>
+            </tr>
+          </thead>
+          <tbody id="top-mem-list"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Top I/O</span></div>
+        <table class="proc-table">
+          <thead>
+            <tr>
+              <th class="proc-pid">PID</th>
+              <th>PROCESSO (IOTOP)</th>
+              <th style="text-align:right">LEIT / ESC / DELAY</th>
+            </tr>
+          </thead>
+          <tbody id="top-io-health-list"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <div class="modal-overlay" id="storage-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span class="card-icon">🗂️</span>
+          <span id="storage-modal-title">Analisando Espaço</span>
+        </div>
+        <button class="modal-close" onclick="closeStorageModal()">✕</button>
+      </div>
+      <div class="modal-body" id="storage-modal-body">
+        <div class="loader"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ARC = 219.9;
+
+    function setGauge(fillId, textId, pct, value, color) {
+      const fill = document.getElementById(fillId);
+      const text = document.getElementById(textId);
+      if (!fill || !text) return;
+      const offset = ARC * (1 - Math.min(Math.max(pct, 0), 100) / 100);
+      fill.style.strokeDashoffset = offset;
+      if (color) fill.style.stroke = color;
+      text.textContent = value;
+    }
+
+    async function fetchMetrics() {
+      try {
+        const res = await fetch('/metrics');
+        const data = await res.json();
+
+        document.getElementById('status-pill').className = 'status-pill online';
+        document.getElementById('status-text').textContent = 'ONLINE';
+        document.getElementById('last-update').textContent = 'Atualizado: ' + new Date().toLocaleTimeString('pt-BR');
+        document.getElementById('app-version').textContent = data.version || 'v3';
+
+        // Core Gauges
+        setGauge('cpu-gauge-fill', 'cpu-text', data.cpu.usage_percent, `${data.cpu.usage_percent}%`);
+        document.getElementById('cpu-cores').textContent = `${data.cpu.core_count} núcleos`;
+
+        setGauge('ram-gauge-fill', 'ram-text', data.memory.used_pct, `${data.memory.used_pct}%`);
+        document.getElementById('ram-label').textContent = `${data.memory.used_mb} / ${data.memory.total_mb} MB`;
+
+        if (data.thermals && data.thermals.length > 0) {
+          const main = data.thermals[0];
+          setGauge('temp-gauge-fill', 'temp-text', (main.temp_c / 100) * 100, `${main.temp_c}°C`);
+          document.getElementById('temp-zone-name').textContent = main.name;
+        }
+
+        // Accelerators
+        if (data.gpu) {
+          const g = data.gpu;
+          document.getElementById('gpu-val').textContent = `${g.gpu_load}%`;
+          document.getElementById('gpu-bar').style.width = `${g.gpu_load}%`;
+          document.getElementById('vdec-val').textContent = `${g.vdec_load}%`;
+          document.getElementById('vdec-bar').style.width = `${g.vdec_load}%`;
+          document.getElementById('venc-val').textContent = `${g.venc_load}%`;
+          document.getElementById('venc-bar').style.width = `${g.venc_load}%`;
+          document.getElementById('npu-val').textContent = `${g.npu_load}%`;
+          document.getElementById('npu-bar').style.width = `${g.npu_load}%`;
+
+          document.getElementById('dmc-val').textContent = `${g.dmc_load}%`;
+          document.getElementById('dmc-bar').style.width = `${g.dmc_load}%`;
+        }
+
+        // Detailed Mem
+        document.getElementById('mem-cache').textContent = `${data.memory.cached_mb} MB`;
+        document.getElementById('mem-used').textContent = `${data.memory.used_mb} MB`;
+        document.getElementById('mem-free').textContent = `${data.memory.free_mb} MB`;
+
+        // Thermals
+        document.getElementById('thermal-list').innerHTML = data.thermals.map(z => `
+            <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted-light)"><span>${z.name}</span><span>${z.temp_c}°C</span></div>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${Math.min(z.temp_c, 100)}%; background:${z.temp_c > 60 ? 'var(--danger)' : 'var(--success)'}"></div></div>
+            </div>
+        `).join('');
+
+        window._disks = data.disks; // Store for IO Health
+
+        // Storage
+        document.getElementById('disk-list').innerHTML = data.disks.map(d => `
+            <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:4px">
+                    <span>${d.label} <span style="font-size:0.75rem; color:var(--muted); font-weight:400">[${d.device_name || '?'}]</span></span>
+                    <span style="color:${d.temp_c > 50 ? 'var(--danger)' : 'var(--success)'}">${d.temp_c > 0 ? d.temp_c + '°C' : ''}</span>
+                </div>
+                <div style="font-size:0.65rem; color:var(--muted); font-family:monospace; margin-bottom:6px">${d.path}</div>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${d.used_pct}%; background:var(--blue)"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted-light); margin-bottom:6px">
+                    <span>${d.used_gb.toFixed(1)} / ${d.total_gb.toFixed(1)} GB</span>
+                    <span>${d.used_pct}%</span>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <div style="display:flex; gap:12px; font-size:0.75rem; font-family:'JetBrains Mono', monospace">
+                        <span style="color:var(--success)">▲ ${d.read_mbps.toFixed(2)} MB/s</span>
+                        <span style="color:var(--orange)">▼ ${d.write_mbps.toFixed(2)} MB/s</span>
+                    </div>
+                    <button class="log-btn" style="padding: 4px 10px; font-size: 0.7rem; font-weight: 600;" onclick="openStorageModal('${d.path.replace(/'/g, "&apos;").replace(/"/g, "&quot;")}', '${d.label.replace(/'/g, "&apos;").replace(/"/g, "&quot;")}')">Analisar</button>
+                </div>
+            </div>
+        `).join('');
+
+        // Processes
+        document.getElementById('top-cpu-list').innerHTML = data.top_cpu.map(p => `
+            <tr><td class="proc-pid">${p.pid}</td><td class="proc-name">${p.name}</td><td class="proc-val c-primary">${p.cpu}%</td></tr>
+        `).join('');
+        document.getElementById('top-mem-list').innerHTML = data.top_mem.map(p => `
+            <tr><td class="proc-pid">${p.pid}</td><td class="proc-name">${p.name}</td><td class="proc-val c-blue">${p.mem_mb}</td></tr>
+        `).join('');
+        // Top IO (from /metrics if available)
+        if (data.top_io && !document.getElementById('top-io-health-list').innerHTML) {
+            // Fallback if iohealth not loaded yet
+            document.getElementById('top-io-health-list').innerHTML = data.top_io.map(p => `
+                <tr><td class="proc-pid">${p.pid}</td><td class="proc-name">${p.name}</td><td class="proc-val"><span style="color:var(--success)">▲${p.read_mbps}</span> <span style="color:var(--orange)">▼${p.write_mbps}</span></td></tr>
+            `).join('');
+        }
+
+        // Self
+        if (data.self) {
+          document.getElementById('self-stats').textContent = `${data.self.mem_mb} MB | ${data.self.cpu.toFixed(1)}% CPU`;
+        }
+
+        // Bot Hardware
+        if (data.bot && data.bot.pid > 0) {
+          document.getElementById('bot-stats-hw').textContent = `${data.bot.mem_mb} MB | ${data.bot.cpu.toFixed(1)}% CPU`;
+          document.getElementById('bot-dot').style.background = 'var(--primary)';
+        } else {
+          document.getElementById('bot-stats-hw').textContent = 'Offline';
+          document.getElementById('bot-dot').style.background = 'var(--danger)';
+        }
+
+        // Sniffer Hardware
+        if (data.sniffer && data.sniffer.pid > 0) {
+          document.getElementById('sniffer-stats-hw').textContent = `${data.sniffer.mem_mb} MB | ${data.sniffer.cpu.toFixed(1)}% CPU`;
+          document.getElementById('sniffer-dot').style.background = 'var(--success)';
+        } else {
+          document.getElementById('sniffer-stats-hw').textContent = 'Offline';
+          document.getElementById('sniffer-dot').style.background = 'var(--danger)';
+        }
+
+      } catch (e) {
+        document.getElementById('status-pill').className = 'status-pill offline';
+        document.getElementById('status-text').textContent = 'OFFLINE';
+      }
+    }
+
+    async function fetchBotStatus() {
+      try {
+        const res = await fetch(`http://${location.hostname}:5001/api/telebot/status`);
+        const data = await res.json();
+        document.getElementById('bot-stats-job').textContent = `${data.active.length} Ativos • ${data.queue.length} Fila`;
+      } catch (e) {
+        document.getElementById('bot-stats-job').textContent = '--';
+      }
+    }
+
+    async function fetchSnifferStatus() {
+      try {
+        const res = await fetch(`http://${location.hostname}:8081/queue`);
+        const data = await res.json();
+        document.getElementById('sniffer-stats-job').textContent = `${data.length} Ativos`;
+      } catch (e) {
+        document.getElementById('sniffer-stats-job').textContent = '--';
+      }
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+      if (!+bytes) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+    }
+
+    async function openStorageModal(path, label, basePath) {
+      if (!basePath) basePath = path;
+      const modal = document.getElementById('storage-modal');
+      const body = document.getElementById('storage-modal-body');
+      const titleElem = document.getElementById('storage-modal-title');
+      
+      const escPath = path.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+      const escLabel = label.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+      const escBase = basePath.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+      
+      if (path !== basePath) {
+        const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
+        const escParent = parentPath.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+        titleElem.innerHTML = `<button class="log-btn" style="padding: 2px 8px; margin-right: 10px;" onclick="openStorageModal('${escParent}', '${escLabel}', '${escBase}')">⬅️ Voltar</button> ${label} <span style="font-size:0.8rem; opacity:0.6;">(${path.replace(basePath, '') || '/'})</span>`;
+      } else {
+        titleElem.innerHTML = `${label} <span style="font-size:0.8rem; opacity:0.6;">(${path})</span>`;
+      }
+      
+      body.innerHTML = '<div class="loader"></div><div style="text-align:center; margin-top:10px; font-size:0.8rem; color:var(--muted);">Calculando tamanho (pode demorar um pouco dependendo da quantidade de arquivos)...</div>';
+      modal.classList.add('active');
+
+      try {
+        const res = await fetch(`/api/storage/analyze?path=${encodeURIComponent(path)}`);
+        if (!res.ok) throw new Error('Erro ao buscar dados do armazenamento');
+        const items = await res.json();
+        
+        if (!items || items.length === 0) {
+          body.innerHTML = '<div style="text-align:center; color:var(--muted); padding: 20px;">Diretório vazio ou sem acesso.</div>';
+          return;
+        }
+
+        body.innerHTML = items.map(item => {
+          const nextPath = path.endsWith('/') ? path + item.name : path + '/' + item.name;
+          const escNext = nextPath.replace(/'/g, "&apos;").replace(/"/g, "&quot;");
+          const clickHandler = item.is_dir ? `onclick="openStorageModal('${escNext}', '${escLabel}', '${escBase}')"` : '';
+          const classNames = item.is_dir ? 'storage-item clickable' : 'storage-item';
+          
+          return `
+          <div class="${classNames}" ${clickHandler}>
+            <div class="storage-name">
+              <span style="font-size:1.1rem;">${item.is_dir ? '📁' : '📄'}</span>
+              <span>${item.name}</span>
+            </div>
+            <div class="storage-size">${formatBytes(item.bytes)}</div>
+          </div>
+        `}).join('');
+      } catch (err) {
+        body.innerHTML = `<div style="text-align:center; color:var(--danger); padding: 20px;">${err.message}</div>`;
+      }
+    }
+
+    function closeStorageModal() {
+      document.getElementById('storage-modal').classList.remove('active');
+    }
+
+    async function fetchIOHealth() {
+      try {
+        const res = await fetch('/api/iohealth');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        if (data.devices) {
+          document.getElementById('io-health-list').innerHTML = data.devices.map(d => {
+            let label = window._disks ? window._disks.find(x => x.device_name === d.device)?.label : '';
+            let labelHtml = label ? `<span style="font-size:0.75rem; color:var(--primary); font-weight:400; margin-left:6px">${label}</span>` : '';
+            return `
+            <div>
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; font-weight:600; color:var(--text); margin-bottom:4px">
+                    <span>${d.device}${labelHtml}</span>
+                    <span style="color:${d.util_pct > 80 ? 'var(--danger)' : (d.util_pct > 40 ? 'var(--warning)' : 'var(--success)')}">${d.util_pct}% Uso</span>
+                </div>
+                <div class="bar-wrap"><div class="bar-fill" style="width:${d.util_pct}%; background:${d.util_pct > 80 ? 'var(--danger)' : 'var(--blue)'}"></div></div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--muted-light); margin-top:8px;">
+                    <span>Fila: <strong style="color:var(--text)">${d.aqu_sz.toFixed(2)}</strong></span>
+                    <span>Espera: <strong style="color:var(--text)">${d.r_await.toFixed(1)}ms R / ${d.w_await.toFixed(1)}ms W</strong></span>
+                </div>
+            </div>
+          `}).join('');
+        }
+
+        if (data.top_io) {
+          document.getElementById('top-io-health-list').innerHTML = data.top_io.map(p => `
+            <tr>
+              <td class="proc-pid">${p.pid}</td>
+              <td class="proc-name" title="${p.command}">
+                 <div style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${p.command || p.user}</div>
+              </td>
+              <td class="proc-val">
+                <div style="font-size:0.65rem; color:var(--success)">▲ ${p.read}</div>
+                <div style="font-size:0.65rem; color:var(--orange)">▼ ${p.write}</div>
+                <div style="font-size:0.65rem; color:var(--danger)">⏱ ${p.io_delay} IO></div>
+              </td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error("Erro ao buscar saúde I/O:", e);
+      }
+    }
+
+    fetchMetrics();
+    fetchIOHealth();
+    fetchBotStatus();
+    fetchSnifferStatus();
+    setInterval(fetchMetrics, 5000);
+    setInterval(fetchIOHealth, 5000);
+    setInterval(fetchBotStatus, 5000);
+    setInterval(fetchSnifferStatus, 5000);
+  </script>
+</body>
+
+</html>

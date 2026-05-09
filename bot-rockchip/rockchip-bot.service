@@ -1,0 +1,20 @@
+[Unit]
+Description=TeleBot Video Downloader for Rockchip
+After=network.target telegram-bot-api.service
+
+[Service]
+# O serviço usará as variáveis definidas no arquivo .env
+EnvironmentFile=/home/olucas/.env
+
+# Caso use o docker-compose local na porta 8081, certifique-se que o host está acessível
+Environment=PORT=5001
+
+Type=simple
+User=olucas
+WorkingDirectory=/home/olucas
+ExecStart=/home/olucas/telebot-linux-arm64
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

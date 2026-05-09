@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Cleanup - Rockchip Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="favicon_geral.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0d0e12;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-hover: rgba(255, 255, 255, 0.1);
+            --primary: #6366f1;
+            --secondary: #ec4899;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-green: #10b981;
+            --accent-orange: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem;
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 40%);
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 2.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-text h1 {
+            font-size: 2rem;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover {
+            color: var(--text-main);
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 1.25rem;
+            backdrop-filter: blur(12px);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .summary-card span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .summary-card h2 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border-radius: 30px;
+            border: 1px solid var(--glass-border);
+            background: var(--card-bg);
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .filter-btn:hover {
+            background: var(--card-hover);
+            color: var(--text-main);
+        }
+
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .cleanup-list {
+            background: var(--card-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.25rem;
+            overflow: hidden;
+            backdrop-filter: blur(12px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            padding: 1.25rem 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--glass-border);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        th:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        th.sort-active {
+            color: var(--primary);
+        }
+
+        th.sort-active::after {
+            content: ' ↓';
+            font-size: 0.7rem;
+        }
+
+        th.sort-active.sort-asc::after {
+            content: ' ↑';
+        }
+
+        td {
+            padding: 1.25rem 1.5rem;
+            font-size: 0.95rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .item-title {
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .item-main-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .item-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 300;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .badge-movie {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent-blue);
+        }
+
+        .badge-series {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--accent-purple);
+        }
+
+        .badge-delete {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .badge-keep {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent-green);
+        }
+
+        .badge-watched {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-size: 0.6rem;
+        }
+
+        .badge-unwatched {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--accent-orange);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+            font-size: 0.6rem;
+        }
+
+        .loading {
+            padding: 4rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty {
+            padding: 4rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem;
+            }
+
+            th,
+            td {
+                padding: 0.75rem 0.5rem;
+                font-size: 0.85rem;
+            }
+
+            .item-main-row {
+                gap: 4px;
+            }
+
+            .badge {
+                padding: 2px 6px;
+                font-size: 0.65rem;
+            }
+
+            /* Don't hide columns, just make them more compact */
+            th:nth-child(2),
+            td:nth-child(2) {
+                display: none;
+            }
+
+            /* Hide type badge to save space, redundant with title info usually */
+        }
+
+        @media (max-width: 480px) {
+            .header-text h1 {
+                font-size: 1.5rem;
+            }
+
+            .summary-card h2 {
+                font-size: 1.4rem;
+            }
+
+            th:nth-child(3),
+            td:nth-child(3) {
+                font-size: 0.75rem;
+                text-align: center;
+                padding: 0.75rem 0.25rem;
+            }
+
+            th:nth-child(4),
+            td:nth-child(4) {
+                font-size: 0.75rem;
+                text-align: center;
+                padding: 0.75rem 0.25rem;
+            }
+
+            th:nth-child(5),
+            td:nth-child(5) {
+                font-size: 0.75rem;
+                text-align: center;
+                padding: 0.75rem 0.25rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="header-text">
+            <h1>Cleanup Dashboard</h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Sugestões de limpeza baseadas em uso</p>
+        </div>
+        <a href="/" class="back-link">← Voltar Home</a>
+    </header>
+
+    <div class="container" id="app">
+        <div class="summary-grid">
+            <div class="summary-card">
+                <span>Sugestões p/ Apagar</span>
+                <h2 id="total-suggestions" class="icon-orange">--</h2>
+            </div>
+            <div class="summary-card">
+                <span>Espaço Recuperável</span>
+                <h2 id="total-recoverable" class="icon-pink">-- GB</h2>
+            </div>
+            <div class="summary-card">
+                <span>Total Analisado</span>
+                <h2 id="total-items">--</h2>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" onclick="setFilter('all')">Todos</button>
+            <button class="filter-btn" onclick="setFilter('delete')">🚨 Sugestões</button>
+            <button class="filter-btn" onclick="setFilter('movie')">🎬 Filmes</button>
+            <button class="filter-btn" onclick="setFilter('series')">📺 Séries</button>
+            <button class="filter-btn" onclick="setFilter('watched')">✅ Assistidos</button>
+            <button class="filter-btn" onclick="setFilter('in_progress')">◓ Em Andamento</button>
+            <button class="filter-btn" onclick="setFilter('unwatched')">⚪ Não Assistidos</button>
+        </div>
+
+        <div class="cleanup-list">
+            <table id="cleanup-table">
+                <thead>
+                    <tr>
+                        <th onclick="toggleSort('title')" id="th-title">Item</th>
+                        <th onclick="toggleSort('type')" id="th-type">Tipo</th>
+                        <th onclick="toggleSort('size_gb')" id="th-size">Tamanho</th>
+                        <th onclick="toggleSort('hold_days')" id="th-age">Idade</th>
+                        <th onclick="toggleSort('suggestion')" id="th-suggestion">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="list-body">
+                    <tr>
+                        <td colspan="5" class="loading">Carregando dados da biblioteca...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        let allData = [];
+        let currentFilter = 'all';
+        let sortCol = 'hold_days';
+        let sortAsc = false;
+
+        async function fetchData() {
+            try {
+                const response = await fetch('/cleanup');
+                allData = await response.json();
+                render();
+            } catch (error) {
+                document.getElementById('list-body').innerHTML = `<tr><td colspan="5" class="empty">Erro ao carregar dados: ${error.message}</td></tr>`;
+            }
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const text = btn.innerText.toLowerCase();
+                const isActive = (filter === 'all' && text.includes('todos')) ||
+                    (filter === 'delete' && text.includes('sugestões')) ||
+                    (filter === 'movie' && text.includes('filmes')) ||
+                    (filter === 'series' && text.includes('séries')) ||
+                    (filter === 'watched' && text.includes('assistidos') && !text.includes('não')) ||
+                    (filter === 'in_progress' && text.includes('andamento')) ||
+                    (filter === 'unwatched' && text.includes('não assistidos'));
+                btn.classList.toggle('active', isActive);
+            });
+            render();
+        }
+
+        function toggleSort(col) {
+            if (sortCol === col) {
+                sortAsc = !sortAsc;
+            } else {
+                sortCol = col;
+                sortAsc = false;
+            }
+            render();
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr || dateStr.startsWith('0001')) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        }
+
+        function render() {
+            let filtered = allData.filter(item => {
+                if (currentFilter === 'all') return true;
+                if (currentFilter === 'delete') return item.suggestion === 'delete';
+                if (currentFilter === 'movie') return item.type === 'movie';
+                if (currentFilter === 'series') return item.type === 'series';
+                
+                const isSeries = item.type === 'series';
+                const isCompleted = isSeries ? (item.total_episodes > 0 && item.watched_episodes >= item.total_episodes) : item.is_watched;
+                const isInProgress = isSeries && item.is_watched && (item.watched_episodes < item.total_episodes);
+
+                if (currentFilter === 'watched') return isCompleted;
+                if (currentFilter === 'in_progress') return isInProgress;
+                if (currentFilter === 'unwatched') return !item.is_watched;
+                
+                return true;
+            });
+
+            // Sort data
+            filtered.sort((a, b) => {
+                let valA = a[sortCol];
+                let valB = b[sortCol];
+
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            // Update sort indicators
+            document.querySelectorAll('th').forEach(th => th.classList.remove('sort-active', 'sort-asc'));
+            const activeTh = document.getElementById(`th-${sortCol === 'size_gb' ? 'size' : sortCol === 'hold_days' ? 'age' : sortCol}`);
+            if (activeTh) {
+                activeTh.classList.add('sort-active');
+                if (sortAsc) activeTh.classList.add('sort-asc');
+            }
+
+            const body = document.getElementById('list-body');
+            if (filtered.length === 0) {
+                body.innerHTML = `<tr><td colspan="5" class="empty">Nenhum item encontrado para este filtro.</td></tr>`;
+            } else {
+                body.innerHTML = filtered.map(item => {
+                    let watchedLabel = item.is_watched ? '✓ ASSISTIDO' : '○ NOVO';
+                    let badgeClass = item.is_watched ? 'badge-watched' : 'badge-unwatched';
+                    let watchedDateHtml = '';
+
+                    if (item.type === 'series' && item.is_watched) {
+                        const isCompleted = item.total_episodes > 0 && item.watched_episodes >= item.total_episodes;
+                        if (!isCompleted) {
+                            watchedLabel = '◓ EM ANDAMENTO';
+                            badgeClass = 'badge-watched';
+                        }
+                    }
+
+                    if (item.is_watched && item.watched_at) {
+                        const date = formatDate(item.watched_at);
+                        if (date) {
+                            watchedDateHtml = `<span style="font-size: 0.65rem; color: var(--text-muted); opacity: 0.8;"> - ${date}</span>`;
+                        }
+                    }
+
+                    return `
+                    <tr>
+                        <td>
+                            <div class="item-title">
+                                <div class="item-main-row">
+                                    ${item.title}
+                                    <span class="badge ${badgeClass}">
+                                        ${watchedLabel}
+                                        ${watchedDateHtml}
+                                    </span>
+                                </div>
+                                ${item.type === 'series' && item.total_episodes > 0 ?
+                            `<span class="item-subtitle" style="color: var(--accent-purple); font-weight: 500; font-size: 0.7rem;">
+                                        📺 Progresso: ${item.watched_episodes ?? 0}/${item.total_episodes} episódios
+                                    </span>` : ''}
+                                <span class="item-subtitle">${item.reason}</span>
+                            </div>
+                        </td>
+                        <td><span class="badge badge-${item.type}">${item.type === 'movie' ? 'Filme' : 'Série'}</span></td>
+                        <td>${item.size_gb.toFixed(2)} GB</td>
+                        <td>${item.hold_days} d</td>
+                        <td>
+                            <span class="badge badge-${item.suggestion === 'delete' ? 'delete' : 'keep'}">
+                                ${item.suggestion === 'delete' ? '🚨 APAGAR?' : 'MANTIDO'}
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                }).join('');
+            }
+
+            // Update summary
+            const suggestions = allData.filter(i => i.suggestion === 'delete');
+            document.getElementById('total-suggestions').innerText = suggestions.length;
+            document.getElementById('total-recoverable').innerText = suggestions.reduce((acc, i) => acc + i.size_gb, 0).toFixed(1) + ' GB';
+            document.getElementById('total-items').innerText = allData.length;
+        }
+
+        fetchData();
+    </script>
+</body>
+
+</html>

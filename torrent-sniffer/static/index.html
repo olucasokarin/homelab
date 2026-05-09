@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Torrent Sniffer - CineRock</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #08090c;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --text: #ffffff;
+            --muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --green: #10b981;
+            --gold: #f59e0b;
+            --blue: #3b82f6;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            background-image:
+                radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 55%),
+                radial-gradient(circle at 100% 100%, rgba(236, 72, 153, 0.08) 0%, transparent 55%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 span {
+            color: var(--primary);
+            -webkit-text-fill-color: var(--primary);
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: 1.05rem;
+            margin-top: 0.5rem;
+        }
+
+        .input-section {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+        }
+
+        textarea {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 1rem;
+            border-radius: 0.8rem;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: all 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+        }
+
+        button.btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 0 2.5rem;
+            border-radius: 0.8rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button.btn-primary:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        button.btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .queue-container {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .queue-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            padding: 1rem;
+            border-radius: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.75rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .btn-flush {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--red);
+            padding: 0.4rem 1rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .btn-flush:hover {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .torrent-card {
+            position: relative;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 1.25rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            gap: 0.85rem;
+        }
+
+        .torrent-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        .torrent-title {
+            font-weight: 600;
+            font-size: 1.05rem;
+            color: var(--text);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.4;
+            padding-right: 45px;
+            word-break: break-all;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--red);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .delete-btn:hover {
+            background: var(--red);
+            color: #fff;
+            transform: rotate(90deg);
+        }
+
+        .badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+        }
+
+        .pt-br-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: auto;
+        }
+
+        .health {
+            display: flex;
+            gap: 12px;
+        }
+
+        .health span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .dot.seed {
+            background: var(--green);
+            box-shadow: 0 0 6px var(--green);
+        }
+
+        .dot.peer {
+            background: var(--muted);
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 1.5rem;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #0f1017;
+            width: 100%;
+            max-width: 950px;
+            max-height: 90vh;
+            border-radius: 1.5rem;
+            border: 1px solid var(--border);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text);
+            font-size: 1.2rem;
+            z-index: 50;
+            transition: all 0.25s;
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 2.5rem;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .modal-body>* {
+            flex-shrink: 0;
+        }
+
+        .modal-header {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.4rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+            word-break: break-all;
+        }
+
+        .h-stat {
+            font-size: 0.85rem;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .h-stat b {
+            color: #fff;
+        }
+
+        .modal-filename {
+            font-size: 0.85rem;
+            color: var(--muted);
+            word-break: break-all;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        /* Expert Analysis */
+        .expert-block {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border);
+            border-radius: 1.25rem;
+            overflow: hidden;
+        }
+
+        .expert-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .expert-header-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+        }
+
+        .verdict-pill {
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .expert-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .expert-criterion {
+            padding: 1.25rem 1.5rem;
+            border-right: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .expert-criterion:nth-child(2n) {
+            border-right: none;
+        }
+
+        .expert-criterion:nth-last-child(-n+2) {
+            border-bottom: none;
+        }
+
+        .crit-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .crit-value {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .score-bar-wrap {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s;
+        }
+
+        .crit-note {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        .mediainfo-raw {
+            background: #000;
+            padding: 1.25rem;
+            border-radius: 0.8rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--green);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            max-height: 250px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .btn-action {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 0.6rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.85rem;
+        }
+
+        .btn-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .expert-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .expert-criterion {
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+
+            .expert-criterion:last-child {
+                border-bottom: none;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button.btn-primary {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Torrent<span>Sniffer</span></h1>
+            <p>Análise orgânica de qualidade (A/V) antes do download completo.</p>
+        </header>
+
+        <section class="input-section">
+            <div class="input-group">
+                <textarea id="magnet-input" rows="3" placeholder="Cole os Links Magnéticos aqui (um por linha)..."
+                    autocomplete="off"></textarea>
+                <button id="sniff-btn" class="btn-primary">Analisar</button>
+            </div>
+
+            <div id="batch-container"
+                style="display:none; margin-top: 1.5rem; padding: 1rem; background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2); border-radius: 0.8rem;">
+                <h3 style="color: var(--blue); font-size: 0.95rem; margin-bottom: 5px;">Análise em Lote (<span
+                        id="batch-progress">0/0</span>)</h3>
+                <div id="batch-best-so-far" style="font-size: 0.85rem; color: #fff;">Aguardando análises...</div>
+            </div>
+
+            <div id="queue-container" class="queue-container"></div>
+        </section>
+
+        <section>
+            <div class="section-header">
+                <h2>Histórico de Análises</h2>
+                <button id="flush-btn" class="btn-flush">Limpar Histórico</button>
+            </div>
+            <div id="history-list" class="grid">
+                <!-- Cards renderizados via JS -->
+            </div>
+        </section>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div id="result-modal" class="modal-backdrop" onclick="closeModalFunc(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-close" onclick="closeModalFunc()">✕</div>
+            <div id="modal-body" class="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT MOVIDA PARA CÁ -->
+    <script>
+        // DOM Elements
+        const magnetInput = document.getElementById('magnet-input');
+        const sniffBtn = document.getElementById('sniff-btn');
+        const historyList = document.getElementById('history-list');
+        const modal = document.getElementById('result-modal');
+        const modalBody = document.getElementById('modal-body');
+        const flushBtn = document.getElementById('flush-btn');
+        const queueContainer = document.getElementById('queue-container');
+
+        // Batch vars
+        let batchResults = [];
+        let batchTotal = 0;
+        let batchCompleted = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchHistory();
+            fetchQueue();
+            setInterval(fetchQueue, 5000);
+
+            sniffBtn.addEventListener('click', () => {
+                if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+                    Notification.requestPermission();
+                }
+                const text = magnetInput.value.trim();
+                if (!text) return alert('Insira um link magnético.');
+                const magnets = text.split('\n').map(l => l.trim()).filter(l => l.startsWith('magnet:?'));
+                if (!magnets.length) return alert('Nenhum link válido.');
+
+                magnetInput.value = '';
+                if (magnets.length > 1) {
+                    batchTotal = magnets.length;
+                    batchCompleted = 0;
+                    batchResults = [];
+                    updateBatchUI();
+                }
+
+                magnets.forEach(magnet => {
+                    fetch('/sniff', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ magnet }) })
+                        .then(async r => {
+                            if (!r.ok) throw new Error(await r.text());
+                            const res = await r.json();
+                            if (batchTotal > 1) { batchResults.push(res); batchCompleted++; updateBatchUI(); }
+                            else { showResult(res); fetchHistory(); notifyUser('Análise Concluída', res.torrent_name || 'Os metadados foram processados.'); }
+                        })
+                        .catch(e => {
+                            if (batchTotal > 1) { batchCompleted++; updateBatchUI(); }
+                            else alert('Erro: ' + e.message);
+                        });
+                });
+                setTimeout(fetchQueue, 500);
+            });
+
+            flushBtn.onclick = async () => {
+                if (!confirm('Apagar todo o histórico irreversivelmente?')) return;
+                try { await fetch('/flush', { method: 'POST' }); fetchHistory(); } catch (e) { }
+            };
+        });
+
+        function updateBatchUI() {
+            const bc = document.getElementById('batch-container');
+            if (batchTotal === 0) { bc.style.display = 'none'; return; }
+            bc.style.display = 'block';
+            document.getElementById('batch-progress').innerText = `${batchCompleted}/${batchTotal}`;
+
+            if (batchCompleted === batchTotal && batchTotal > 0) {
+                setTimeout(() => {
+                    fetchHistory();
+                    let best = batchResults.map(r => ({ r, a: analyzeResult(r) })).sort((a, b) => b.a.avg - a.a.avg)[0];
+                    if (best) showResult(best.r);
+                    let title = 'Lote Concluído';
+                    let msg = 'Análise de múltiplos torrents finalizada.';
+                    if (best && best.r && best.r.torrent_name) msg = best.r.torrent_name;
+                    notifyUser(title, msg);
+                    batchTotal = 0; batchCompleted = 0; batchResults = [];
+                }, 500);
+            }
+        }
+
+        async function fetchQueue() {
+            try {
+                const res = await fetch('/queue');
+                const data = await res.json();
+                queueContainer.innerHTML = (data || []).map(t => `
+                    <div class="queue-card">
+                        <div>
+                            <div style="font-size:0.9rem;font-weight:600;color:var(--text)">${t.Name || 'Aguardando Metadados...'}</div>
+                            <div style="font-size:0.75rem;color:var(--blue)">Progresso: ${t.DownloadedMB > 0 ? t.DownloadedMB.toFixed(1) + ' MB' : '0.0 MB'} - ${t.Status}</div>
+                        </div>
+                        <button onclick="cancelTask('${t.ID}')" class="btn-flush" style="padding:0.25rem 0.75rem">Cancelar</button>
+                    </div>
+                `).join('');
+            } catch (e) { }
+        }
+
+        window.cancelTask = async (id) => {
+            if (!confirm('Cancelar?')) return;
+            await fetch('/cancel?id=' + id, { method: 'POST' });
+            fetchQueue();
+        }
+
+        async function fetchHistory() {
+            try {
+                const res = await fetch('/history');
+                const data = await res.json();
+                historyList.innerHTML = data.length ? '' : '<p style="color:var(--muted)">Nenhuma análise ainda.</p>';
+                data.forEach((item, index) => {
+                    const a = analyzeResult(item);
+                    const div = document.createElement('div');
+                    div.className = 'torrent-card';
+                    div.onclick = () => showResult(item, data, index);
+                    div.innerHTML = `
+                        <div class="delete-btn" onclick="deleteItem('${item.id}', event)">✕</div>
+                        <div class="torrent-title" title="${item.torrent_name}">${item.torrent_name || 'Desconhecido'}</div>
+                        <div class="badges">
+                            <span class="badge" style="color:${a.vColor}; border-color:${a.vColor}44">Score: ${a.avg}</span>
+                            <span class="badge" style="color:${a.bitrateColor}; border-color:${a.bitrateColor}44">${a.bitrateMbps.toFixed(1)} Mbps</span>
+                            <span class="badge">${a.hdrLabel}</span>
+                            <span class="badge">${a.audioLabel}</span>
+                            ${a.hasPtBr ? '<span class="badge pt-br-badge">PT-BR</span>' : ''}
+                        </div>
+                        <div class="meta-row" style="align-items:flex-end;">
+                            <span style="line-height:1.2">
+                                ${(item.file_size / 1024 ** 3).toFixed(2)} GB
+                                ${item.torrent_size && item.torrent_size > item.file_size * 1.05 ? `<br><span style="font-size:0.7rem;color:var(--muted)">Pacote: ${(item.torrent_size / 1024 ** 3).toFixed(2)} GB</span>` : ''}
+                            </span>
+                            <div class="health">
+                                <span><i class="dot seed"></i> ${item.seeds || 0}</span>
+                                <span><i class="dot peer"></i> ${item.peers || 0}</span>
+                            </div>
+                        </div>
+                    `;
+                    historyList.appendChild(div);
+                });
+            } catch (e) { }
+        }
+
+        window.deleteItem = async (id, e) => {
+            e.stopPropagation();
+            if (!confirm('Deletar?')) return;
+            await fetch('/delete?id=' + id, { method: 'POST' });
+            fetchHistory();
+        }
+
+        function htmlEsc(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function renderHomelabBlock(result) {
+            const h = result.homelab;
+            if (!h || typeof h !== 'object') return '';
+            const vColor = h.veredito === 'RECOMENDADO' ? '#10b981' : (h.veredito === 'REJEITADO' ? '#ef4444' : '#f59e0b');
+            const pts = (h.pontos_atencao || []).map(p => `<li style="margin:4px 0;color:var(--muted)">${htmlEsc(p)}</li>`).join('');
+            return `
+                <div class="expert-block" style="margin-top:14px;border-color:${vColor}44">
+                    <div class="expert-header">
+                        <span class="expert-header-title">Home Lab · Encoding / Qualidade</span>
+                        <span class="verdict-pill" style="background:${vColor}22;border:1px solid ${vColor}55;color:${vColor}">${htmlEsc(h.veredito || '')}</span>
+                    </div>
+                    <div style="padding: 1.25rem 1.5rem;">
+                        <p style="margin:0 0 10px 0;font-size:0.85rem;color:var(--fg);">${htmlEsc(h.analise_tecnica || '')}</p>
+                        <div style="font-size:0.75rem;color:var(--muted);">BPP ≈ ${h.bpp != null ? Number(h.bpp).toFixed(4) : '—'} · Nota ${h.nota_final != null ? h.nota_final : '—'}/10</div>
+                        ${pts ? `<ul style="margin:10px 0 0;padding-left:1.1rem;font-size:0.8rem">${pts}</ul>` : ''}
+                        <button type="button" class="btn-action" id="copy-llm-bundle-btn" style="margin-top:12px;background:#6366f1;border-color:#6366f1;color:#fff;font-size:12px;">Copiar llm_bundle (JSON)</button>
+                    </div>
+                </div>`;
+        }
+
+        function showResult(result, contextArray = null, currentIndex = -1) {
+            const a = analyzeResult(result);
+            let probeObj = result.probe;
+            if (typeof probeObj === 'string') try { probeObj = JSON.parse(probeObj); } catch (e) { }
+
+            let navHtml = '';
+            if (contextArray && contextArray.length > 1 && currentIndex >= 0) {
+                const hasPrev = currentIndex > 0;
+                const hasNext = currentIndex < contextArray.length - 1;
+                navHtml = `
+                    <div style="display:flex; gap: 8px; margin-bottom: 15px; align-items:center; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
+                        <button onclick="window.navResult(${currentIndex - 1})" class="btn-action" style="padding:4px 10px; font-size:12px; ${hasPrev ? '' : 'opacity:0.3; cursor:not-allowed;'}" ${hasPrev ? '' : 'disabled'}>&larr; Anterior</button>
+                        <span style="color:var(--muted); font-size:13px; font-weight:bold; flex:1; text-align:center;">Navegação: ${currentIndex + 1} de ${contextArray.length}</span>
+                        <button onclick="window.navResult(${currentIndex + 1})" class="btn-action" style="padding:4px 10px; font-size:12px; ${hasNext ? '' : 'opacity:0.3; cursor:not-allowed;'}" ${hasNext ? '' : 'disabled'}>Próximo &rarr;</button>
+                    </div>
+                `;
+                window._modalContext = contextArray;
+            }
+
+            window._currentRawJsonText = JSON.stringify(probeObj, null, 2);
+
+            modalBody.innerHTML = `
+                ${navHtml}
+                <div class="modal-header">
+                    <div style="flex:1;">
+                        <h2>${result.torrent_name || 'Detalhes da Mídia'}</h2>
+                        <div style="display:flex; gap:12px; margin-bottom:8px;">
+                            <span class="h-stat"><i class="dot seed"></i> Seeds: <b>${result.seeds || 0}</b></span>
+                            <span class="h-stat"><i class="dot peer"></i> Peers: <b>${result.peers || 0}</b></span>
+                        </div>
+                        <div class="modal-filename">Arquivo Interno: ${result.file_name}</div>
+                    </div>
+                    <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                        ${result.magnet ? `<button class="btn-action" style="background:#10b981; border-color:#10b981; color:#000; font-weight:600;" onclick="retestMagnet('${result.magnet}')">Retestar</button>` : ''}
+                        ${result.magnet ? `<button class="btn-action" onclick="copyMagnet('${result.magnet}')">Copiar Magnet</button>` : ''}
+                        <button class="btn-action" style="background:var(--blue); border-color:var(--blue); color:#fff;" onclick="copyRawInfo(this)">Copiar Info Completa</button>
+                    </div>
+                </div>
+                
+                <hr style="border:0; border-top:1px solid var(--border); margin: 15px 0;">
+
+                <div class="notes-section" style="margin-top: 15px; margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 1.25rem;">
+                    <h3 style="color:#8b949e; margin-bottom:10px; font-size:14px; font-weight:normal;">Notas do Teste</h3>
+                    <textarea id="notes-${result.id}" style="width: 100%; min-height: 80px; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; color: #fff; font-family: inherit; resize: vertical;" placeholder="Adicione notas ou observações sobre este teste...">${result.notes || ''}</textarea>
+                    <button class="btn-action" style="background:#3b82f6; border-color:#3b82f6; color:#fff;" onclick="saveNotes('${result.id}')">Salvar Notas</button>
+                </div>
+
+                ${renderExpertBlock(a)}
+                ${renderHomelabBlock(result)}
+
+                <div>
+                    <h3 style="color:#8b949e; margin-top:15px; margin-bottom:10px; font-size:14px; font-weight:normal;">Relatório Raw (${result.probe_tool})</h3>
+                    <div class="mediainfo-raw">${fmtRaw(probeObj, result.probe_tool)}</div>
+                </div>
+            `;
+            const llmBtn = document.getElementById('copy-llm-bundle-btn');
+            if (llmBtn && result.homelab && result.homelab.llm_bundle) {
+                llmBtn.style.display = '';
+                llmBtn.onclick = () => {
+                    const t = JSON.stringify(result.homelab.llm_bundle, null, 2);
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        navigator.clipboard.writeText(t).then(() => { llmBtn.textContent = 'Copiado!'; setTimeout(() => { llmBtn.textContent = 'Copiar llm_bundle (JSON)'; }, 2000); });
+                    }
+                };
+            } else if (llmBtn) {
+                llmBtn.style.display = 'none';
+            }
+            modal.classList.add('active');
+        }
+
+        window.retestMagnet = (magnet) => {
+            modal.classList.remove('active');
+            magnetInput.value = magnet;
+            sniffBtn.click();
+        };
+
+        window.closeModalFunc = (e) => {
+            if (!e || e.target === modal || e.target.classList.contains('modal-close') || e.target.closest('.modal-close')) {
+                modal.classList.remove('active');
+            }
+        }
+
+        window.copyMagnet = (magnet) => {
+            navigator.clipboard.writeText(magnet).then(() => alert('Copiado!')).catch(() => alert('Erro ao copiar'));
+        }
+
+        window.saveNotes = async (id) => {
+            const notes = document.getElementById(`notes-${id}`).value;
+            try {
+                const res = await fetch('/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: String(id), notes: notes })
+                });
+                if (!res.ok) throw new Error('Falha ao salvar notas');
+                
+                // Update local context to keep it in sync without closing modal
+                if (window._modalContext) {
+                    const idx = window._modalContext.findIndex(x => String(x.id) === String(id));
+                    if (idx >= 0) window._modalContext[idx].notes = notes;
+                }
+                
+                alert('Notas salvas com sucesso!');
+                fetchHistory(); // update the list in background
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        window.navResult = (idx) => {
+            if (window._modalContext && window._modalContext[idx]) {
+                showResult(window._modalContext[idx], window._modalContext, idx);
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (modal.classList.contains('active') && window._modalContext) {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    if (window._currentNavIndex > 0) {
+                        navResult(window._currentNavIndex - 1);
+                    }
+                } else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    if (window._currentNavIndex < window._modalContext.length - 1) {
+                        navResult(window._currentNavIndex + 1);
+                    }
+                } else if (e.key === 'Escape') {
+                    modal.classList.remove('active');
+                }
+            }
+        });
+
+        window.copyRawInfo = (btn) => {
+            if (window._currentRawJsonText) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(window._currentRawJsonText);
+                } else {
+                    const ta = document.createElement("textarea");
+                    ta.value = window._currentRawJsonText;
+                    ta.style.position = "fixed";
+                    document.body.appendChild(ta);
+                    ta.select();
+                    try { document.execCommand('copy'); } catch (e) { }
+                    document.body.removeChild(ta);
+                }
+                const oldText = btn.innerText;
+                btn.innerText = 'Copiado!';
+                setTimeout(() => btn.innerText = oldText, 2000);
+            }
+        };
+
+        // ==========================================
+        // EXPERT ANALYSIS ENGINE
+        // ==========================================
+        function num(v) {
+            if (v == null) return 0;
+            if (typeof v === 'number') return v;
+            const match = String(v).replace(/\s/g, '').replace(/,/g, '').match(/[\d.]+/);
+            return match ? parseFloat(match[0]) : 0;
+        }
+
+        function getFFprobeField(s, fields) {
+            for (let f of fields) if (s[f]) return s[f];
+            if (s.tags) { for (let f of fields) if (s.tags[f]) return s.tags[f]; }
+            return '';
+        }
+
+        function analyzeResult(item) {
+            let probeObj = item.probe;
+            if (typeof probeObj === 'string') try { probeObj = JSON.parse(probeObj); if (typeof probeObj === 'string') probeObj = JSON.parse(probeObj); } catch (e) { }
+
+            let V = null, audios = [], isFfprobe = Array.isArray(probeObj?.streams);
+            let def = { bitrateMbps: 0, bitrateClass: 'Desconhecido', bitrateColor: '#94a3b8', bitrateScore: 0, hdrLabel: 'SDR', hdrScore: 0, hdrColor: '#94a3b8', audioLabel: 'N/A', audioScore: 0, audioColor: '#94a3b8', hasPtBr: false, avg: 0, vColor: '#94a3b8', verdict: 'N/A' };
+
+            if (isFfprobe) {
+                const general = probeObj.format || {};
+                V = probeObj.streams.find(s => s.codec_type === 'video');
+                audios = probeObj.streams.filter(s => s.codec_type === 'audio').map(s => ({
+                    Format: s.codec_name, Language: getFFprobeField(s, ['language']), Title: getFFprobeField(s, ['title']),
+                    Channels: s.channels, BitRate: getFFprobeField(s, ['bit_rate', 'BPS'])
+                }));
+                if (V) {
+                    V = {
+                        BitRate: getFFprobeField(V, ['bit_rate', 'BPS']) || general.bit_rate,
+                        Width: V.width, Height: V.height, Format: V.codec_name,
+                        BitDepth: V.bits_per_raw_sample || V.bits_per_sample,
+                        ColorPrimaries: V.color_primaries, transfer_characteristics: V.color_transfer,
+                        HDR_Format: getFFprobeField(V, ['hdr_format']), FrameRate: V.r_frame_rate
+                    };
+                }
+            } else {
+                const tracks = probeObj?.media?.track || [];
+                const general = tracks.find(t => t['@type'] === 'General') || {};
+                V = tracks.find(t => t['@type'] === 'Video');
+                audios = tracks.filter(t => t['@type'] === 'Audio');
+                if (V && !V.BitRate && general.OverallBitRate) V.BitRate = general.OverallBitRate;
+            }
+
+            if (!V) return def;
+
+            let realDurationSecs = 0;
+            if (isFfprobe && probeObj?.format?.duration) realDurationSecs = parseFloat(probeObj.format.duration);
+            else if (!isFfprobe && probeObj?.media?.track) {
+                const gen = probeObj.media.track.find(t => t['@type'] === 'General');
+                if (gen && gen.Duration) realDurationSecs = parseFloat(gen.Duration);
+            }
+
+            let calculatedBitrate = 0;
+            if (realDurationSecs > 0 && item.file_size > 0) calculatedBitrate = (item.file_size * 8) / realDurationSecs;
+
+            if (calculatedBitrate > 0) {
+                V.BitRate = calculatedBitrate;
+            } else if (!V.BitRate || num(V.BitRate) < 100000) {
+                V.BitRate = 0;
+            }
+
+            let bitrateMbps = num(V.BitRate) / 1000000;
+            let width = num(V.Width), is4K = width >= 3840;
+
+            if (is4K) {
+                if (bitrateMbps > 60) { def.bitrateClass = 'Remux UHD'; def.bitrateScore = 100; def.bitrateColor = '#a78bfa'; }
+                else if (bitrateMbps > 25) { def.bitrateClass = 'Alta Fidelidade'; def.bitrateScore = 90; def.bitrateColor = '#10b981'; }
+                else if (bitrateMbps > 12) { def.bitrateClass = 'WEB-DL 4K'; def.bitrateScore = 75; def.bitrateColor = '#3b82f6'; }
+                else if (bitrateMbps > 8) { def.bitrateClass = 'WEB Médio'; def.bitrateScore = 55; def.bitrateColor = '#f59e0b'; }
+                else { def.bitrateClass = 'Comprimido'; def.bitrateScore = 35; def.bitrateColor = '#ef4444'; }
+            } else {
+                if (bitrateMbps > 25) { def.bitrateClass = 'Remux 1080p'; def.bitrateScore = 100; def.bitrateColor = '#a78bfa'; }
+                else if (bitrateMbps > 12) { def.bitrateClass = 'Alta Fidelidade'; def.bitrateScore = 90; def.bitrateColor = '#10b981'; }
+                else if (bitrateMbps > 6) { def.bitrateClass = 'WEB Alta Fidelidade'; def.bitrateScore = 70; def.bitrateColor = '#3b82f6'; }
+                else { def.bitrateClass = 'Comprimido / WEB'; def.bitrateScore = 40; def.bitrateColor = '#f59e0b'; }
+            }
+            def.bitrateMbps = bitrateMbps;
+
+            let bitDepth = num(V.BitDepth || '8');
+            let colorScore = bitDepth >= 10 ? 45 : 10;
+            let colorPrim = String(V.ColorPrimaries || V.color_primaries || V.colour_primaries || V.ColorSpace || V.Color_primaries || '');
+
+            let hdrRaw = (String(V.HDR_Format || '') + ' ' + String(V.HDR_Format_Profile || '') + ' ' + String(V.HDR_Format_Compatibility || '') + ' ' + String(V.HDR_Format_String || '') + ' ' + String(V.transfer_characteristics || '') + ' ' + String(V.colour_transfer || '')).toLowerCase();
+            let isDV = hdrRaw.includes('dolby vision') || hdrRaw.includes('dv');
+            let isP5 = isDV && (hdrRaw.includes('profile 5') || hdrRaw.includes('profile: 5') || hdrRaw.includes('dvhe.05') || hdrRaw.includes('dvh1.05'));
+
+            // Extract DV profile number for label
+            let dvProfile = '';
+            if (isDV) {
+              const dvMatch = hdrRaw.match(/dvhe\.(\d+)|dvh1\.(\d+)|profile\s*[:.]?\s*(\d+)/);
+              if (dvMatch) {
+                const pNum = dvMatch[1] || dvMatch[2] || dvMatch[3];
+                dvProfile = ' P' + pNum;
+                if (pNum === '8' && (hdrRaw.includes('8.1') || hdrRaw.includes('cross'))) {
+                  dvProfile = ' P8.1';
+                }
+              }
+            }
+
+            if (isP5) {
+                colorPrim = 'ICtCp (BT.2020)';
+                colorScore += 35;
+
+            } else {
+                if (colorPrim.includes('2020')) colorScore += 35; else if (colorPrim.includes('p3') || colorPrim.includes('P3')) colorScore += 25;
+            }
+
+            def.colorScore = Math.min(100, colorScore + 20);
+            def.colorColor = def.colorScore >= 80 ? '#10b981' : def.colorScore >= 55 ? '#3b82f6' : '#f59e0b';
+            def.bitDepth = bitDepth; def.colorPrim = colorPrim || 'BT.709';
+
+            let isHDR10P = hdrRaw.includes('hdr10+') || hdrRaw.includes('st 2094') || hdrRaw.includes('2094');
+            let isHDR10 = hdrRaw.includes('hdr10') || hdrRaw.includes('pq') || hdrRaw.includes('smpte2084') || hdrRaw.includes('2086');
+
+            if (isDV && isHDR10P) { def.hdrScore = 100; def.hdrLabel = 'DV' + dvProfile + ' + HDR10+'; def.hdrColor = '#f59e0b'; }
+            else if (isDV) { def.hdrScore = 90; def.hdrLabel = 'Dolby Vision' + dvProfile; def.hdrColor = '#f59e0b'; }
+            else if (isHDR10P) { def.hdrScore = 85; def.hdrLabel = 'HDR10+'; def.hdrColor = '#a78bfa'; }
+            else if (isHDR10) { def.hdrScore = 65; def.hdrLabel = 'HDR10'; def.hdrColor = '#3b82f6'; }
+
+            let maxCh = 0, bestCodec = '', isAtmos = false;
+            for (let a of audios) {
+                let lang = String(a.Language || '').toLowerCase();
+                let title = String(a.Title || '').toLowerCase();
+                if (lang.includes('pt') || lang.includes('por') || title.includes('dual') || title.includes('dublado') || title.includes('port')) def.hasPtBr = true;
+
+                let text = String(a.Format || '') + String(a.Format_Commercial_IfAny || '');
+                let ch = num(a.Channels || a['Channel(s)'] || 2);
+                if (ch > maxCh) { maxCh = ch; bestCodec = text; }
+                if (text.toLowerCase().includes('atmos') || text.toLowerCase().includes('joc')) isAtmos = true;
+            }
+            if (!bestCodec && audios.length > 0) bestCodec = audios[0].Format;
+            def.audioLabel = bestCodec ? `${maxCh}ch ${bestCodec}` : 'Sem Áudio';
+
+            if (isAtmos) { def.audioScore = 100; def.audioLabel = 'Dolby Atmos'; def.audioColor = '#a78bfa'; }
+            else if (maxCh >= 7) { def.audioScore = 90; def.audioLabel = '7.1 Surround'; def.audioColor = '#10b981'; }
+            else if (maxCh >= 5) { def.audioScore = 75; def.audioLabel = '5.1 Surround'; def.audioColor = '#3b82f6'; }
+            else if (maxCh >= 2) { def.audioScore = 40; def.audioLabel = 'Stereo 2.0'; def.audioColor = '#f59e0b'; }
+
+            def.avg = Math.round((def.bitrateScore + def.colorScore + def.hdrScore + def.audioScore) / 4);
+            if (def.avg >= 85) { def.verdict = 'Referência'; def.vColor = '#a78bfa'; }
+            else if (def.avg >= 70) { def.verdict = 'Alta Qualidade'; def.vColor = '#10b981'; }
+            else if (def.avg >= 50) { def.verdict = 'Média-Alta'; def.vColor = '#3b82f6'; }
+            else { def.verdict = 'Comprimido'; def.vColor = '#ef4444'; }
+
+            return def;
+        }
+
+        function renderExpertBlock(a) {
+            const pct = s => Math.round(s) + '%';
+            return `
+            <div class="expert-block">
+                <div class="expert-header">
+                    <span class="expert-header-title">Análise de Engenharia A/V</span>
+                    <span class="verdict-pill" style="background:${a.vColor}22;border:1px solid ${a.vColor}55;color:${a.vColor}">${a.verdict} (Score: ${a.avg})</span>
+                </div>
+                <div class="expert-grid">
+                    <div class="expert-criterion">
+                        <div class="crit-label">Eficiência de Bitrate</div>
+                        <div class="crit-value"><span style="color:${a.bitrateColor}">${a.bitrateClass}</span></div>
+                        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${pct(a.bitrateScore)};background:${a.bitrateColor}"></div></div>
+                        <div class="crit-note">${a.bitrateMbps.toFixed(1)} Mbps brutos detectados.</div>
+                    </div>
+                    <div class="expert-criterion">
+                        <div class="crit-label">Profundidade & Cor</div>
+                        <div class="crit-value"><span style="color:${a.colorColor}">${a.bitDepth}-bit · ${a.colorPrim}</span></div>
+                        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${pct(a.colorScore)};background:${a.colorColor}"></div></div>
+                        <div class="crit-note">Mapeamento de espaço de cor nativo.</div>
+                    </div>
+                    <div class="expert-criterion">
+                        <div class="crit-label">Implementação HDR</div>
+                        <div class="crit-value"><span style="color:${a.hdrColor}">${a.hdrLabel}</span></div>
+                        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${pct(a.hdrScore)};background:${a.hdrColor}"></div></div>
+                        <div class="crit-note">Tags de faixa de brilho e metadados visuais.</div>
+                    </div>
+                    <div class="expert-criterion">
+                        <div class="crit-label">Aproveitamento Sonoro</div>
+                        <div class="crit-value"><span style="color:${a.audioColor}">${a.audioLabel}</span></div>
+                        <div class="score-bar-wrap"><div class="score-bar-fill" style="width:${pct(a.audioScore)};background:${a.audioColor}"></div></div>
+                        <div class="crit-note">${a.hasPtBr ? '<span style="color:#34d399;font-weight:bold;">[PT-BR DETECTADO]</span> ' : ''}Análise das faixas de áudio.</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        function formatBytes(bytes) {
+            if (!bytes) return "?";
+            let num = parseInt(bytes);
+            if (num > 1024 ** 3) return (num / (1024 ** 3)).toFixed(2) + " GB";
+            if (num > 1024 ** 2) return (num / (1024 ** 2)).toFixed(2) + " MB";
+            return (num / 1024).toFixed(2) + " KB";
+        }
+
+        function fmtRaw(info, tool) {
+            if (typeof info === 'string') try { info = JSON.parse(info); } catch (e) { }
+            let out = "";
+            if (tool === 'mediainfo' && info?.media?.track) {
+                info.media.track.forEach(t => {
+                    out += `[${t['@type']}]\n`;
+                    if (t['@type'] === 'General') {
+                        out += `Format     : ${t.Format || '?'}\n`;
+                        out += `Size       : ${formatBytes(t.FileSize)}\n`;
+                        out += `Duration   : ${parseFloat(t.Duration || 0).toFixed(2)}s\n`;
+                        if (t.OverallBitRate) out += `Bitrate    : ${formatBytes(t.OverallBitRate)}/s\n`;
+                    } else if (t['@type'] === 'Video') {
+                        out += `Codec      : ${t.Format || '?'}\n`;
+                        out += `Resolution : ${t.Width}x${t.Height} @ ${t.FrameRate}fps\n`;
+                        out += `Bit depth  : ${t.BitDepth || '?'}-bit\n`;
+                        if (t.ColorPrimaries || t.Color_primaries) out += `Primaries  : ${t.ColorPrimaries || t.Color_primaries}\n`;
+                        if (t.BitRate) out += `Bitrate    : ${formatBytes(t.BitRate)}/s\n`;
+                        if (t.HDR_Format) out += `HDR        : ${t.HDR_Format}\n`;
+                        if (t.Writing_library || t.Encoded_Library) out += `Library    : ${t.Writing_library || t.Encoded_Library}\n`;
+                        if (t.Encoding_Settings) out += `Enc. set.  : ${String(t.Encoding_Settings).slice(0, 500)}${String(t.Encoding_Settings).length > 500 ? '…' : ''}\n`;
+                    } else if (t['@type'] === 'Audio') {
+                        const lang = (t.Language || 'und').toUpperCase();
+                        out += `Language   : ${lang}\n`;
+                        out += `Format     : ${t.Format || '?'}\n`;
+                        out += `Channels   : ${t.Channels || t['Channel(s)'] || '?'}ch\n`;
+                    }
+                    out += '\n';
+                });
+            } else if (tool === 'ffprobe' && info?.streams) {
+                info.streams.forEach(s => {
+                    out += `[${s.codec_type.toUpperCase()}]\n`;
+                    out += `Codec      : ${s.codec_name} (${s.codec_long_name})\n`;
+                    if (s.codec_type === 'video') {
+                        out += `Resolution : ${s.width}x${s.height}\n`;
+                        if (s.bit_rate) out += `Bitrate    : ${formatBytes(s.bit_rate)}/s\n`;
+                        if (s.color_transfer) out += `Color Trns : ${s.color_transfer}\n`;
+                    } else if (s.codec_type === 'audio') {
+                        out += `Channels   : ${s.channels}\n`;
+                        let lang = info.tags && info.tags.language ? info.tags.language : '';
+                        if (lang) out += `Language   : ${lang}\n`;
+                        if (s.bit_rate) out += `Bitrate    : ${formatBytes(s.bit_rate)}/s\n`;
+                    }
+                    out += '\n';
+                });
+            } else {
+                out = JSON.stringify(info, null, 2);
+            }
+            return out;
+        }
+
+        function playNotificationSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1);
+                
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio not supported", e);
+            }
+        }
+
+        function notifyUser(title, body) {
+            playNotificationSound();
+            if ("Notification" in window && Notification.permission === "granted") {
+                new Notification(title, { body: body, icon: 'favicon.png' });
+            }
+        }
+    </script>
+</body>
+
+</html>

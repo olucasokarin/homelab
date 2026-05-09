@@ -1,0 +1,88 @@
+services:
+  # Gerenciador de Indexadores
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /media/biblioteca/config/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  # Filmes
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /media/biblioteca/config/radarr:/config
+      - /media/biblioteca:/media/biblioteca
+      - /mnt/storage:/mnt/storage
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  # S??ries
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /media/biblioteca/config/sonarr:/config
+      - /media/biblioteca:/media/biblioteca
+      - /mnt/storage:/mnt/storage
+    ports:
+      - 8989:8989
+    restart: unless-stopped
+
+  # Legendas
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - /media/biblioteca/config/bazarr:/config
+      - /media/biblioteca:/media/biblioteca
+      - /mnt/storage:/mnt/storage
+    ports:
+      - 6767:6767
+    restart: unless-stopped
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=America/Sao_Paulo
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+
+  telegram-bot-api:
+    image: aiogram/telegram-bot-api:latest
+    container_name: telegram-bot-api
+    user: "root"
+    environment:
+      - TZ=America/Sao_Paulo
+      - TELEGRAM_API_ID=${TELEGRAM_API_ID}
+      - TELEGRAM_API_HASH=${TELEGRAM_API_HASH}
+      - TELEGRAM_LOCAL=${TELEGRAM_LOCAL:-1}
+    volumes:
+      - /media/biblioteca/config/telegram-bot-api:/var/lib/telegram-bot-api
+    command: --dir=/var/lib/telegram-bot-api --temp-dir=/tmp/telegram-bot-api --username=root --groupname=root --http-port=8081 --local
+    ports:
+      - 8082:8081
+    restart: unless-stopped

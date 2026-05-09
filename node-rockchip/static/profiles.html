@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfis HDR & Cor — CineRock</title>
+  <link rel="icon" type="image/svg+xml" href="favicon_geral.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0e12;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-hover: rgba(255, 255, 255, 0.1);
+      --primary: #6366f1;
+      --secondary: #ec4899;
+      --text: #ffffff;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+      --green: #10b981;
+      --gold: #f59e0b;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+      --cyan: #06b6d4;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-image:
+        radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 45%);
+      background-attachment: fixed;
+    }
+
+    header {
+      width: 100%; max-width: 1200px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 2rem;
+    }
+    .header-text h1 {
+      font-size: 2rem; font-weight: 700;
+      background: linear-gradient(100deg, #fff 30%, #a78bfa);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .header-text p { color: var(--muted); font-size: 0.9rem; margin-top: 2px; }
+    .back-link {
+      text-decoration: none; color: var(--muted); font-size: 0.9rem;
+      display: flex; align-items: center; gap: 8px; transition: color 0.3s;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    .container { width: 100%; max-width: 1200px; }
+
+    /* Summary Cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .summary-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 1.25rem;
+      border-radius: 1.25rem;
+      backdrop-filter: blur(12px);
+      display: flex; flex-direction: column; gap: 0.3rem;
+    }
+    .summary-card span {
+      font-size: 0.72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .summary-card h2 { font-size: 1.6rem; font-weight: 700; }
+
+    /* Controls */
+    .controls {
+      display: flex; gap: 0.75rem; margin-bottom: 1.25rem;
+      flex-wrap: wrap; align-items: center;
+    }
+    .scan-btn {
+      padding: 0.6rem 1.4rem; border-radius: 10px; border: none;
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: #fff; font-weight: 600; font-size: 0.85rem;
+      cursor: pointer; transition: all 0.3s;
+      font-family: 'Outfit', sans-serif;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4); }
+    .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .scan-btn .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .search-input {
+      padding: 0.55rem 1rem; border-radius: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--text); font-size: 0.85rem;
+      font-family: 'Outfit', sans-serif;
+      width: 240px; transition: border-color 0.2s;
+    }
+    .search-input:focus { outline: none; border-color: var(--primary); }
+    .search-input::placeholder { color: var(--muted); }
+
+    .scan-status {
+      font-size: 0.8rem; color: var(--muted);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Filters */
+    .filters {
+      display: flex; gap: 0.6rem; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 0.5rem 1rem; border-radius: 30px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--muted); cursor: pointer;
+      font-size: 0.8rem; font-family: 'Outfit', sans-serif;
+      transition: all 0.25s; white-space: nowrap;
+    }
+    .filter-btn:hover { background: var(--card-hover); color: var(--text); }
+    .filter-btn.active {
+      background: var(--primary); color: #fff;
+      border-color: var(--primary);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Table */
+    .table-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      padding: 1rem 1.25rem; font-size: 0.72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      background: rgba(255,255,255,0.02);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; user-select: none; transition: background 0.2s;
+    }
+    th:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+    th.sort-active { color: var(--primary); }
+    th.sort-active::after { content: ' ↓'; font-size: 0.65rem; }
+    th.sort-active.sort-asc::after { content: ' ↑'; }
+    td {
+      padding: 0.9rem 1.25rem; font-size: 0.9rem;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .movie-name {
+      font-weight: 600;
+      max-width: 320px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.68rem; font-weight: 600;
+      text-transform: uppercase; white-space: nowrap;
+      letter-spacing: 0.03em;
+    }
+    .badge-dv { background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.3); }
+    .badge-hdr10 { background: rgba(59,130,246,0.12); color: #60a5fa; border: 1px solid rgba(59,130,246,0.25); }
+    .badge-hdr10p { background: rgba(6,182,212,0.12); color: #22d3ee; border: 1px solid rgba(6,182,212,0.25); }
+    .badge-hlg { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+    .badge-sdr { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+    .badge-err { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.25); }
+    .badge-10bit { background: rgba(16,185,129,0.12); color: #34d399; }
+    .badge-8bit { background: rgba(148,163,184,0.08); color: #64748b; }
+    .badge-bt2020 { background: rgba(236,72,153,0.1); color: #f472b6; }
+    .badge-bt709 { background: rgba(148,163,184,0.08); color: #94a3b8; }
+    .badge-dv-code { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.08em; }
+
+    .loading-state {
+      padding: 4rem; text-align: center; color: var(--muted); font-size: 0.95rem;
+    }
+    .loading-state .big-icon { font-size: 2.5rem; margin-bottom: 0.75rem; }
+
+    .count-badge {
+      font-size: 0.65rem; color: var(--muted);
+      margin-left: 4px; font-weight: 400;
+    }
+
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      th, td { padding: 0.6rem 0.5rem; font-size: 0.8rem; }
+      .movie-name { max-width: 180px; }
+      /* Hide less critical columns on mobile */
+      th:nth-child(6), td:nth-child(6) { display: none; }
+    }
+    @media (max-width: 480px) {
+      .header-text h1 { font-size: 1.5rem; }
+      .summary-card h2 { font-size: 1.3rem; }
+      th:nth-child(5), td:nth-child(5) { display: none; }
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      top: 2rem; right: 2rem;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      z-index: 9999;
+      opacity: 0;
+      transform: translateX(60px);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 420px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+    .toast-success {
+      background: rgba(16, 185, 129, 0.9);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+    .toast-error {
+      background: rgba(239, 68, 68, 0.9);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="header-text">
+      <h1>🌈 Perfis HDR & Cor</h1>
+      <p>Análise de perfil visual da biblioteca de filmes</p>
+    </div>
+    <a href="/" class="back-link">← Voltar Home</a>
+  </header>
+
+  <div class="container" id="app">
+    <div class="summary-grid">
+      <div class="summary-card">
+        <span>Total Filmes</span>
+        <h2 id="s-total" style="color: var(--text)">--</h2>
+      </div>
+      <div class="summary-card">
+        <span>Dolby Vision</span>
+        <h2 id="s-dv" style="color: #a78bfa">--</h2>
+      </div>
+      <div class="summary-card">
+        <span>HDR10</span>
+        <h2 id="s-hdr10" style="color: #60a5fa">--</h2>
+      </div>
+      <div class="summary-card">
+        <span>HDR10+</span>
+        <h2 id="s-hdr10p" style="color: #22d3ee">--</h2>
+      </div>
+      <div class="summary-card">
+        <span>SDR</span>
+        <h2 id="s-sdr" style="color: var(--muted)">--</h2>
+      </div>
+      <div class="summary-card">
+        <span>10-bit</span>
+        <h2 id="s-10bit" style="color: #34d399">--</h2>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="scan-btn" id="scan-btn" onclick="startScan()">
+        <span id="scan-icon">🔍</span>
+        <span id="scan-label">Analisar Biblioteca</span>
+      </button>
+      <input type="text" class="search-input" id="search" placeholder="Buscar filme..." oninput="applyFilters()">
+      <span class="scan-status" id="scan-status"></span>
+    </div>
+
+    <div class="filters" id="filters">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">Todos</button>
+      <button class="filter-btn" data-filter="dv" onclick="setFilter('dv')">🟣 Dolby Vision</button>
+      <button class="filter-btn" data-filter="hdr10" onclick="setFilter('hdr10')">🔵 HDR10</button>
+      <button class="filter-btn" data-filter="hdr10p" onclick="setFilter('hdr10p')">🟢 HDR10+</button>
+      <button class="filter-btn" data-filter="hlg" onclick="setFilter('hlg')">🟡 HLG</button>
+      <button class="filter-btn" data-filter="sdr" onclick="setFilter('sdr')">⚪ SDR</button>
+      <button class="filter-btn" data-filter="10bit" onclick="setFilter('10bit')">10-bit</button>
+      <button class="filter-btn" data-filter="8bit" onclick="setFilter('8bit')">8-bit</button>
+      <button class="filter-btn" data-filter="bt2020" onclick="setFilter('bt2020')">BT.2020</button>
+      <button class="filter-btn" data-filter="dvp5" onclick="setFilter('dvp5')">DV P5</button>
+      <button class="filter-btn" data-filter="dvp7" onclick="setFilter('dvp7')">DV P7</button>
+      <button class="filter-btn" data-filter="dvp8" onclick="setFilter('dvp8')">DV P8</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="toggleSort('name')" id="th-name">Filme</th>
+            <th onclick="toggleSort('codec')" id="th-codec">Codec</th>
+            <th onclick="toggleSort('hdr_profile')" id="th-hdr_profile">Perfil HDR</th>
+            <th onclick="toggleSort('dv_profile')" id="th-dv_profile">DV Profile</th>
+            <th onclick="toggleSort('bit_depth')" id="th-bit_depth">Bit Depth</th>
+            <th onclick="toggleSort('color_space')" id="th-color_space">Cor</th>
+            <th onclick="toggleSort('resolution')" id="th-resolution">Resolução</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr>
+            <td colspan="7" class="loading-state">
+              <div class="big-icon">🌈</div>
+              Clique em "Analisar Biblioteca" para escanear os perfis HDR
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    let allData = [];
+    let currentFilter = 'all';
+    let sortCol = 'name';
+    let sortAsc = true;
+    let searchText = '';
+
+    async function startScan() {
+      const btn = document.getElementById('scan-btn');
+      const icon = document.getElementById('scan-icon');
+      const label = document.getElementById('scan-label');
+      const status = document.getElementById('scan-status');
+
+      btn.disabled = true;
+      icon.innerHTML = '<div class="spinner"></div>';
+      label.textContent = 'Analisando...';
+      status.textContent = 'Rodando mediainfo em cada filme — pode levar alguns minutos...';
+
+      document.getElementById('table-body').innerHTML = `
+        <tr><td colspan="6" class="loading-state">
+          <div class="big-icon">⏳</div>
+          Analisando biblioteca... Cada filme passa pelo mediainfo.
+        </td></tr>`;
+
+      try {
+        const start = Date.now();
+        const r = await fetch('/api/hdr/scan');
+        const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+        if (!r.ok) {
+          const err = await r.text();
+          throw new Error(err);
+        }
+
+        allData = await r.json();
+        status.textContent = `✅ ${allData.length} filmes analisados em ${elapsed}s`;
+
+        const dvCount = allData.filter(i => i.hdr_profile.includes('Dolby')).length;
+        const hdrCount = allData.filter(i => i.hdr_profile.includes('HDR10')).length;
+        showToast('success', `✅ Scan concluído — ${allData.length} filmes (${dvCount} DV, ${hdrCount} HDR10) em ${elapsed}s`);
+
+        updateSummary();
+        applyFilters();
+      } catch (e) {
+        status.textContent = `❌ Erro: ${e.message}`;
+        showToast('error', `❌ Erro na análise: ${e.message.substring(0, 100)}`);
+        document.getElementById('table-body').innerHTML = `
+          <tr><td colspan="7" class="loading-state">
+            <div class="big-icon">❌</div>
+            Erro ao analisar: ${e.message}
+          </td></tr>`;
+      } finally {
+        btn.disabled = false;
+        icon.innerHTML = '🔍';
+        label.textContent = 'Analisar Biblioteca';
+      }
+    }
+
+    function updateSummary() {
+      document.getElementById('s-total').textContent = allData.length;
+      document.getElementById('s-dv').textContent = allData.filter(i => i.hdr_profile.includes('Dolby')).length;
+      document.getElementById('s-hdr10').textContent = allData.filter(i => i.hdr_profile === 'HDR10' || i.hdr_profile.includes('HDR10')).length;
+      document.getElementById('s-hdr10p').textContent = allData.filter(i => i.hdr_profile.includes('HDR10+')).length;
+      document.getElementById('s-sdr').textContent = allData.filter(i => i.hdr_profile === 'SDR').length;
+      document.getElementById('s-10bit').textContent = allData.filter(i => i.bit_depth === '10').length;
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filter === f);
+      });
+      applyFilters();
+    }
+
+    function toggleSort(col) {
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = true;
+      }
+      applyFilters();
+    }
+
+    function matchesFilter(item) {
+      switch (currentFilter) {
+        case 'all': return true;
+        case 'dv': return item.hdr_profile.includes('Dolby');
+        case 'hdr10': return item.hdr_profile === 'HDR10' || (item.hdr_profile.includes('HDR10') && !item.hdr_profile.includes('HDR10+'));
+        case 'hdr10p': return item.hdr_profile.includes('HDR10+');
+        case 'hlg': return item.hdr_profile === 'HLG';
+        case 'sdr': return item.hdr_profile === 'SDR';
+        case '10bit': return item.bit_depth === '10';
+        case '8bit': return item.bit_depth === '8';
+        case 'bt2020': return item.color_space && item.color_space.includes('BT.2020');
+        case 'dvp5': return item.dv_profile === 'P5';
+        case 'dvp7': return item.dv_profile === 'P7';
+        case 'dvp8': return item.dv_profile === 'P8' || item.dv_profile === 'P8.1';
+        default: return true;
+      }
+    }
+
+    function profileBadge(profile) {
+      if (profile.includes('Dolby')) return `<span class="badge badge-dv">${esc(profile)}</span>`;
+      if (profile.includes('HDR10+')) return `<span class="badge badge-hdr10p">${esc(profile)}</span>`;
+      if (profile.includes('HDR10')) return `<span class="badge badge-hdr10">${esc(profile)}</span>`;
+      if (profile === 'HLG') return `<span class="badge badge-hlg">${esc(profile)}</span>`;
+      if (profile === 'Erro') return `<span class="badge badge-err">ERRO</span>`;
+      return `<span class="badge badge-sdr">${esc(profile)}</span>`;
+    }
+
+    function bitBadge(bd) {
+      if (bd === '10' || bd === '12') return `<span class="badge badge-10bit">${bd}-bit</span>`;
+      if (bd === '8') return `<span class="badge badge-8bit">${bd}-bit</span>`;
+      return bd ? `<span class="badge badge-8bit">${bd}-bit</span>` : '-';
+    }
+
+    function colorBadge(cs) {
+      if (!cs) return '-';
+      if (cs.includes('BT.2020')) return `<span class="badge badge-bt2020">BT.2020</span>`;
+      return `<span class="badge badge-bt709">${esc(cs)}</span>`;
+    }
+
+    function dvBadge(dvp) {
+      if (!dvp) return '<span style="color:var(--muted);font-size:0.8rem;">—</span>';
+      return `<span class="badge badge-dv-code">${esc(dvp)}</span>`;
+    }
+
+    function applyFilters() {
+      searchText = document.getElementById('search').value.toLowerCase();
+
+      let filtered = allData.filter(item => {
+        if (!matchesFilter(item)) return false;
+        if (searchText && !item.name.toLowerCase().includes(searchText)) return false;
+        return true;
+      });
+
+      // Sort
+      filtered.sort((a, b) => {
+        let va = a[sortCol] || '';
+        let vb = b[sortCol] || '';
+
+        // Numeric sort for bit_depth
+        if (sortCol === 'bit_depth') {
+          va = parseInt(va) || 0;
+          vb = parseInt(vb) || 0;
+        } else {
+          va = va.toLowerCase();
+          vb = vb.toLowerCase();
+        }
+
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+      });
+
+      // Update sort indicators
+      document.querySelectorAll('th').forEach(th => th.classList.remove('sort-active', 'sort-asc'));
+      const activeTh = document.getElementById(`th-${sortCol}`);
+      if (activeTh) {
+        activeTh.classList.add('sort-active');
+        if (sortAsc) activeTh.classList.add('sort-asc');
+      }
+
+      // Update filter counts
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        const f = btn.dataset.filter;
+        if (f === 'all') return;
+        const oldCount = btn.querySelector('.count-badge');
+        if (oldCount) oldCount.remove();
+        // Save original filter temporarily
+        const saved = currentFilter;
+        currentFilter = f;
+        const c = allData.filter(i => matchesFilter(i)).length;
+        currentFilter = saved;
+        if (c > 0) {
+          btn.insertAdjacentHTML('beforeend', `<span class="count-badge">(${c})</span>`);
+        }
+      });
+
+      const body = document.getElementById('table-body');
+      if (filtered.length === 0) {
+        body.innerHTML = `<tr><td colspan="7" class="loading-state">
+          <div class="big-icon">🔍</div>
+          Nenhum filme encontrado para este filtro.
+        </td></tr>`;
+        return;
+      }
+
+      body.innerHTML = filtered.map(item => `
+        <tr>
+          <td><span class="movie-name" title="${esc(item.path)}">${esc(item.name)}</span></td>
+          <td>${esc(item.codec || '-')}</td>
+          <td>${profileBadge(item.hdr_profile)}</td>
+          <td>${dvBadge(item.dv_profile)}</td>
+          <td>${bitBadge(item.bit_depth)}</td>
+          <td>${colorBadge(item.color_space)}</td>
+          <td>${esc(item.resolution || '-')}</td>
+        </tr>`).join('');
+    }
+
+    function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+    function showToast(type, message) {
+      const toast = document.getElementById('toast');
+      toast.className = 'toast toast-' + type;
+      toast.textContent = message;
+      // Force reflow then show
+      toast.offsetHeight;
+      toast.classList.add('visible');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('visible'), 5000);
+    }
+  </script>
+
+  <div id="toast" class="toast"></div>
+</body>
+
+</html>

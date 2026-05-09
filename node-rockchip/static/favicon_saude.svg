@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <style>
+      .bg{fill:#0f172a;} /* Cor do fundo do seu tema */
+      .pulse{fill:none;stroke:#2dd4bf;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;} /* Teal/Success */
+      .base-bar{fill:#38bdf8;opacity:0.3;} /* Cyan/Info */
+    </style>
+  </defs>
+  <rect class="bg" width="32" height="32" rx="6"/>
+  <rect class="base-bar" x="5" y="22" width="22" height="4" rx="2"/>
+  <path class="pulse" d="M6,17 L9,17 L12,8 L15,24 L19,13 L22,17 L26,17" />
+</svg>

@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineRock - Media Library</title>
+  <link rel="icon" type="image/svg+xml" href="favicon_geral.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08090c;
+      --card-bg: rgba(255,255,255,0.03);
+      --primary: #6366f1;
+      --text: #ffffff;
+      --muted: #94a3b8;
+      --border: rgba(255,255,255,0.1);
+      --green: #10b981;
+      --gold: #f59e0b;
+      --blue: #3b82f6;
+      --red: #ef4444;
+      --purple: #8b5cf6;
+      --pink: #ec4899;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      background-image:
+        radial-gradient(circle at 0% 0%, rgba(99,102,241,0.08) 0%, transparent 55%),
+        radial-gradient(circle at 100% 100%, rgba(236,72,153,0.08) 0%, transparent 55%);
+      background-attachment: fixed;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .back-link {
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      transition: color 0.3s;
+    }
+    .back-link:hover { color: var(--primary); }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 600;
+      background: linear-gradient(to right, #fff, #94a3b8);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .container { width: 100%; max-width: 1400px; }
+
+    /* === TABS === */
+    .tabs {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.95rem;
+      cursor: pointer;
+      padding: 0.4rem 1rem;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .tab-btn.active { color: var(--text); background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); }
+
+    /* === GRID === */
+    .movie-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+      gap: 1.5rem;
+      padding: 0.5rem 0 2rem;
+    }
+
+    .search-wrap {
+      margin-bottom: 2rem;
+      width: 100%;
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1.25rem 0.85rem 3rem;
+      border-radius: 14px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: 'Outfit', sans-serif;
+    }
+    .search-wrap input:focus {
+      outline: none;
+      background: rgba(255,255,255,0.06);
+      border-color: var(--primary);
+      box-shadow: 0 0 20px rgba(99,102,241,0.15);
+    }
+    .search-wrap svg {
+      position: absolute;
+      left: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .movie-card {
+      position: relative;
+      aspect-ratio: 2/3;
+      border-radius: 1rem;
+      overflow: hidden;
+      cursor: pointer;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .movie-card:hover {
+      transform: scale(1.05) translateY(-5px);
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      border-color: rgba(255,255,255,0.25);
+    }
+    .movie-card img { width: 100%; height: 100%; object-fit: cover; transition: filter 0.3s; }
+    .movie-card:hover img { filter: brightness(0.65); }
+
+    .info-overlay {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 1rem;
+      background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+    }
+    .movie-card:hover .info-overlay { transform: translateY(0); }
+    .movie-title { font-weight: 600; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .movie-type  { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+
+    /* === MODALS === */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 1.5rem;
+    }
+    .modal-backdrop.active { display: flex; }
+
+    .modal-content {
+      background: #0f1017;
+      width: 100%;
+      max-width: 1060px;
+      max-height: 92vh;
+      border-radius: 2rem;
+      border: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: modalIn 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.92) translateY(16px); }
+      to   { opacity: 1; transform: scale(1)   translateY(0); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 1.25rem; right: 1.25rem;
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text); font-size: 1.1rem; z-index: 50;
+      transition: all 0.25s;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.12); transform: rotate(90deg); }
+
+    /* Detail layout */
+    .modal-body {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .modal-left { display: flex; flex-direction: column; gap: 1.25rem; }
+    .modal-poster {
+      width: 100%;
+      border-radius: 1.25rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.7);
+      border: 1px solid var(--border);
+    }
+
+    .modal-info h2 { font-size: 1.7rem; margin-bottom: 0.4rem; line-height: 1.2; }
+    .overview { color: var(--muted); line-height: 1.6; font-size: 0.9rem; margin-bottom: 1.25rem; }
+
+    /* Badges */
+    .badges { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 1.25rem; }
+    .badge {
+      padding: 4px 11px;
+      border-radius: 7px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+    }
+    .badge-dv     { background: rgba(245,158,11,0.13);  border-color: rgba(245,158,11,0.35);  color: #fbbf24; }
+    .badge-hdr    { background: rgba(99,102,241,0.13);  border-color: rgba(99,102,241,0.35);  color: #818cf8; }
+    .badge-atmos  { background: rgba(245,158,11,0.13);  border-color: rgba(245,158,11,0.35);  color: #fbbf24; }
+    .badge-4k     { background: rgba(139,92,246,0.13);  border-color: rgba(139,92,246,0.35);  color: #a78bfa; }
+    .badge-ok     { background: rgba(16,185,129,0.1);   border-color: rgba(16,185,129,0.3);   color: #34d399; }
+
+    /* ============================================================
+       EXPERT ANALYSIS
+    ============================================================ */
+    .expert-block {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 1.25rem;
+      overflow: hidden;
+    }
+
+    .expert-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .expert-header-title {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+    }
+
+    .verdict-pill {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .expert-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .expert-criterion {
+      padding: 1rem 1.25rem;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .expert-criterion:nth-child(2n) { border-right: none; }
+    .expert-criterion:nth-last-child(-n+2) { border-bottom: none; }
+
+    .crit-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .crit-value {
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .score-bar-wrap {
+      height: 5px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .crit-note { font-size: 0.68rem; color: var(--muted); line-height: 1.4; }
+
+    /* Hardware findings */
+    .hw-findings { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+    .hw-finding {
+      display: flex;
+      align-items: flex-start;
+      gap: 7px;
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+    .hw-finding .dot {
+      min-width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-top: 4px;
+    }
+
+    /* Verdict summary bar */
+    .verdict-summary {
+      padding: 1rem 1.25rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 1rem;
+    }
+    .verdict-score-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+    .verdict-score-seg {
+      flex: 1;
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.07);
+      overflow: hidden;
+    }
+    .verdict-score-seg-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s 0.1s cubic-bezier(0.4,0,0.2,1);
+    }
+    .verdict-text { font-size: 0.75rem; color: var(--muted); }
+
+    /* Spec section generic */
+    .spec-section { margin-top: 1.25rem; }
+    .spec-title {
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .spec-title::after {
+      content: "";
+      height: 1px;
+      flex-grow: 1;
+      background: linear-gradient(to right, var(--border), transparent);
+    }
+
+    /* Audio tracks */
+    .audio-tracks { display: flex; flex-direction: column; gap: 5px; }
+    .audio-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.72rem;
+    }
+    .audio-row.best { border-color: rgba(245,158,11,0.35); background: rgba(245,158,11,0.04); }
+    .audio-lang   { color: var(--muted); min-width: 38px; font-weight: 600; text-transform: uppercase; padding-top: 1px; }
+    .audio-title  { flex: 1; color: var(--text); overflow-wrap: anywhere; word-break: break-word; line-height: 1.4; }
+    .audio-ch     { color: var(--muted); min-width: 30px; text-align: right; white-space: nowrap; padding-top: 1px; }
+
+    /* MediaInfo raw */
+    .mediainfo-raw {
+      background: #000;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      color: var(--green);
+      overflow-x: auto;
+      white-space: pre-wrap;
+      max-height: 160px;
+      border: 1px solid rgba(16,185,129,0.2);
+    }
+
+    .mediainfo-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .copy-mediainfo-btn {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.25);
+      color: var(--green);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.68rem;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s;
+      white-space: nowrap;
+    }
+    .copy-mediainfo-btn:hover {
+      background: rgba(16,185,129,0.15);
+      border-color: rgba(16,185,129,0.45);
+      transform: translateY(-1px);
+    }
+    .copy-mediainfo-btn.copied {
+      background: rgba(16,185,129,0.2);
+      border-color: var(--green);
+      color: #fff;
+    }
+
+    /* Episode picker */
+    .ep-modal-body { padding: 1.75rem; overflow-y: auto; max-height: 85vh; }
+    .ep-modal-title { font-size: 1.4rem; margin-bottom: 1.25rem; }
+    .season-block { margin-bottom: 1.75rem; }
+    .season-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .season-label::after { content: ""; height: 1px; flex-grow: 1; background: linear-gradient(to right, var(--border), transparent); }
+    .episode-list { display: flex; flex-direction: column; gap: 5px; }
+    .episode-btn {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.65rem 1rem;
+      border-radius: 0.6rem;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: all 0.2s;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+    }
+    .episode-btn:hover { background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3); }
+    .ep-num { min-width: 36px; font-size: 0.7rem; color: var(--muted); font-weight: 600; }
+
+    /* Loader */
+    .loader { display: flex; justify-content: center; padding: 4rem; width: 100%; }
+    .spinner {
+      width: 38px; height: 38px;
+      border: 3px solid rgba(255,255,255,0.08);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .full-spinner { grid-column: 1/-1; display: flex; justify-content: center; padding: 3rem; }
+
+    @media (max-width: 900px) {
+      .modal-body { grid-template-columns: 1fr; }
+      .modal-poster { max-width: 200px; margin: 0 auto; }
+      .expert-grid { grid-template-columns: 1fr; }
+      .expert-criterion { border-right: none; }
+      .expert-criterion:nth-last-child(-n+2) { border-bottom: 1px solid var(--border); }
+      .expert-criterion:last-child { border-bottom: none; }
+    }
+
+    @media (max-width: 600px) {
+      body { padding: 1.25rem; }
+      header { margin-bottom: 1.5rem; }
+      header h1 { font-size: 1.5rem; }
+      .movie-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+      }
+      .movie-card { border-radius: 0.8rem; }
+      .movie-title { font-size: 0.75rem; }
+      .movie-type { font-size: 0.6rem; }
+      .search-wrap { margin-bottom: 1.5rem; }
+      .search-wrap input { font-size: 0.9rem; padding-top: 0.7rem; padding-bottom: 0.7rem; }
+      .tabs { gap: 0.4rem; overflow-x: auto; padding-bottom: 0.5rem; }
+      .tab-btn { font-size: 0.85rem; padding: 0.35rem 0.8rem; white-space: nowrap; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <a href="/" class="back-link">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      Dashboard
+    </a>
+    <h1>CineRock Library</h1>
+    <div style="width:80px"></div>
+  </header>
+
+  <div class="container">
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-all"    onclick="switchTab('all')">Todos</button>
+      <button class="tab-btn"        id="tab-movies" onclick="switchTab('Movie')">Filmes</button>
+      <button class="tab-btn"        id="tab-series" onclick="switchTab('Series')">Séries</button>
+    </div>
+
+    <div class="search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <input type="text" id="movie-search" placeholder="Pesquisar títulos..." oninput="onSearchInput()">
+    </div>
+    <div id="loading" class="loader"><div class="spinner"></div></div>
+    <div id="movie-grid" class="movie-grid"></div>
+  </div>
+
+  <!-- Movie Detail Modal -->
+  <div id="detail-modal" class="modal-backdrop" onclick="closeDetailModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-close" onclick="closeDetailModal()">✕</div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Episode Picker Modal -->
+  <div id="ep-modal" class="modal-backdrop" onclick="closeEpModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <div class="modal-close" onclick="closeEpModal()">✕</div>
+      <div class="ep-modal-body" id="ep-modal-body"></div>
+    </div>
+  </div>
+
+  <script>
+  // ================================================================
+  // CONFIG
+  // ================================================================
+  const API_IP   = window.location.hostname;
+  const API_PORT = window.location.port || '5000';
+  const API_BASE = `http://${API_IP}:${API_PORT}`;
+  const JELLY    = `http://${API_IP}:8096`;
+  const JKEY     = '61e94a9cbeb24356b48585b86bcaf44a';
+
+  // TCL 55C6K estimated specs
+  const TV = {
+    name       : 'TCL 55C6K Mini LED',
+    peakNits   : 1300,   // conservative estimate (full-screen ~700, small window ~1300+)
+    supportsDV : true,
+    supportsHDRPlus: true,
+    supportsHDR10: true,
+    localDimming: true,
+    pctP3      : 94,     // approx DCI-P3 coverage
+  };
+  const SOUNDBAR = { name: 'LG S70TR', channels: '5.1.1', supportsAtmos: true, supportsDTS: true };
+
+  let allMovies = [];
+  let activeTab = 'all';
+  let lastRawMediaInfo = null;
+
+  // ================================================================
+  // FETCH & RENDER GRID
+  // ================================================================
+  async function fetchMovies() {
+    try {
+      const r = await fetch(`${API_BASE}/api/movies`);
+      allMovies = await r.json();
+      renderMovies();
+    } catch(e) {
+      document.getElementById('loading').innerHTML = '<p style="color:var(--red);padding:2rem">Erro ao carregar. Backend offline?</p>';
+    } finally {
+      document.getElementById('loading').style.display = 'none';
+    }
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const id = tab === 'all' ? 'tab-all' : tab === 'Movie' ? 'tab-movies' : 'tab-series';
+    document.getElementById(id).classList.add('active');
+    renderMovies();
+  }
+
+  function renderMovies() {
+    const query = document.getElementById('movie-search')?.value.toLowerCase() || '';
+    let list = activeTab === 'all' ? allMovies : allMovies.filter(m => m.type === activeTab);
+
+    if (query) {
+      list = list.filter(m => m.name.toLowerCase().includes(query));
+    }
+
+    const grid = document.getElementById('movie-grid');
+    if (list.length === 0) {
+      grid.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--muted); font-size: 0.9rem;">
+        Nenhum ${activeTab === 'Movie' ? 'filme' : activeTab === 'Series' ? 'série' : 'título'} encontrado para "${esc(query)}"
+      </div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map(m => {
+      const gi = allMovies.indexOf(m);
+      return `
+        <div class="movie-card" onclick="onCardClick(${gi})">
+          ${m.has_image
+            ? `<img src="${JELLY}/Items/${m.id}/Images/Primary?maxWidth=360&api_key=${JKEY}" alt="${esc(m.name)}" loading="lazy">`
+            : `<div style="height:100%;display:flex;align-items:center;justify-content:center;background:#141520;color:#2a2b38;font-size:0.75rem;padding:1rem;text-align:center">${esc(m.name)}</div>`
+          }
+          <div class="info-overlay">
+            <div class="movie-type">${m.type === 'Movie' ? '🎬 Filme' : '📺 Série'}</div>
+            <div class="movie-title">${esc(m.name)}</div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function onSearchInput() {
+    renderMovies();
+  }
+
+  function onCardClick(idx) {
+    const m = allMovies[idx];
+    if (m.type === 'Series') openEpisodePicker(m);
+    else openDetail(m);
+  }
+
+  // ================================================================
+  // MOVIE DETAIL
+  // ================================================================
+  async function openDetail(movie) {
+    const modal = document.getElementById('detail-modal');
+    const body  = document.getElementById('modal-body');
+    modal.classList.add('active');
+    body.innerHTML = `<div class="full-spinner"><div class="spinner"></div></div>`;
+
+    let info = null, err = null;
+    try {
+      const r = await fetch(`${API_BASE}/api/mediainfo?path=${encodeURIComponent(movie.path)}`);
+      if (r.ok) info = await r.json(); else err = await r.text();
+    } catch(e) { err = e.message; }
+
+    lastRawMediaInfo = info;
+    renderDetail(movie, info, err);
+  }
+
+  function renderDetail(movie, info, err) {
+    const body = document.getElementById('modal-body');
+
+    const videoTrack  = info?.media?.track?.find(t => t['@type'] === 'Video');
+    const audioTracks = (info?.media?.track || []).filter(t => t['@type'] === 'Audio');
+    const bestAudio   = pickBestAudio(audioTracks);
+
+    // Top badges
+    const is4K    = parseInt(videoTrack?.Width || 0) >= 3840;
+    const isDV    = !!(videoTrack?.HDR_Format?.includes('Dolby Vision'));
+    const isHDR   = !!(videoTrack?.HDR_Format || (videoTrack?.transfer_characteristics||'').includes('PQ'));
+    const isAtmos = isAtmosTrack(bestAudio);
+    const audioCh = parseInt(bestAudio?.Channels || bestAudio?.['Channel(s)'] || '0');
+
+    const analysis = info ? performExpertAnalysis(info) : null;
+
+    body.innerHTML = `
+      <div class="modal-left">
+        <img class="modal-poster"
+          src="${JELLY}/Items/${movie.id}/Images/Primary?maxWidth=500&api_key=${JKEY}"
+          alt="${esc(movie.name)}">
+
+        ${audioTracks.length > 0 ? `
+        <div>
+          <div class="spec-title">Faixas de Áudio (${audioTracks.length})</div>
+          <div class="audio-tracks">
+            ${audioTracks.map(t => renderAudioRow(t, t === bestAudio)).join('')}
+          </div>
+        </div>` : ''}
+
+        ${movie.type === 'Episode' ? `
+          <button class="episode-btn" style="margin-top: 1rem; width: 100%; justify-content: center; background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25); color: var(--text); font-weight: 600;" 
+            onclick="backToEpisodes('${movie.id}')">
+            ← Ver Episódios
+          </button>
+        ` : ''}
+      </div>
+
+      <div class="modal-info">
+        <h2>${esc(movie.name)}</h2>
+
+        <div class="badges">
+          ${is4K    ? '<span class="badge badge-4k">4K UHD</span>'           : '<span class="badge">HD 1080p</span>'}
+          ${isDV    ? '<span class="badge badge-dv">Dolby Vision</span>'      : (isHDR ? '<span class="badge badge-hdr">HDR10</span>' : '')}
+          ${isAtmos ? '<span class="badge badge-atmos">Dolby Atmos</span>'   : (audioCh >= 8 ? '<span class="badge">7.1</span>' : audioCh >= 6 ? '<span class="badge">5.1</span>' : '')}
+          <span class="badge">${movie.type === 'Movie' ? 'Cinema' : 'TV'}</span>
+        </div>
+
+        <p class="overview">${esc(movie.overview || 'Sem sinopse disponível.')}</p>
+
+        ${err ? `<p style="color:var(--red);font-size:0.8rem;margin-bottom:1rem">⚠️ MediaInfo indisponível: ${esc(err)}</p>` : ''}
+
+        ${analysis ? renderExpertBlock(analysis) : ''}
+
+        <div class="spec-section">
+          <div class="mediainfo-header">
+            <div class="spec-title" style="margin-bottom:0">Relatório MediaInfo CLI</div>
+            ${info ? `<button class="copy-mediainfo-btn" onclick="copyRawMediaInfo(this)">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+              Copiar MediaInfo
+            </button>` : ''}
+          </div>
+          ${info ? `<div class="mediainfo-raw" style="margin-top:0.6rem">${fmtRaw(info)}</div>`
+                 : '<p style="color:var(--muted);font-size:0.8rem">Sem dados disponíveis.</p>'}
+        </div>
+      </div>`;
+  }
+
+  // ================================================================
+  // EXPERT ANALYSIS ENGINE
+  // ================================================================
+
+  /**
+   * Returns a number from any mediainfo field (may be "533", "533 cd/m2", 533, etc.)
+   */
+  function num(v) {
+    if (v == null) return 0;
+    if (typeof v === 'number') return v;
+    // Extract ONLY the first sequence of numbers/dots to avoid picking up the '2' in 'm2'
+    const match = String(v).match(/[\d.]+/);
+    return match ? parseFloat(match[0]) : 0;
+  }
+
+  function performExpertAnalysis(info) {
+    const V = info?.media?.track?.find(t => t['@type'] === 'Video');
+    const G = info?.media?.track?.find(t => t['@type'] === 'General');
+    if (!V) return null;
+
+    // ---- 1. BITRATE ----
+    const bitrateMbps = num(V.BitRate) / 1_000_000;
+    const width  = num(V.Width);
+    const height = num(V.Height);
+    const fps    = num(V.FrameRate);
+    const codec  = V.Format || '';
+    const fileSizeGB = num(G?.FileSize) / 1_073_741_824;
+
+    const is4K = width >= 3840;
+    let bitrateClass, bitrateScore, bitrateNote, bitrateColor;
+    if (is4K) {
+      if (bitrateMbps > 60)      { bitrateClass = 'Remux UHD';          bitrateScore = 100; bitrateColor = '#a78bfa'; bitrateNote = 'Stream de disco — máxima fidelidade.'; }
+      else if (bitrateMbps > 30) { bitrateClass = 'Alta Fidelidade';    bitrateScore = 90;  bitrateColor = '#10b981'; bitrateNote = 'Encode premium, aproveita bem o painel.'; }
+      else if (bitrateMbps > 15) { bitrateClass = 'WEB Alta Fidelidade';bitrateScore = 75;  bitrateColor = '#3b82f6'; bitrateNote = 'Aproveitamento sólido da tecnologia Mini LED.'; }
+      else if (bitrateMbps > 10) { bitrateClass = 'WEB Médio';          bitrateScore = 55;  bitrateColor = '#f59e0b'; bitrateNote = 'Bitrate padrão de streaming.'; }
+      else                       { bitrateClass = 'Comprimido';         bitrateScore = 35;  bitrateColor = '#ef4444'; bitrateNote = `${bitrateMbps.toFixed(1)} Mbps — Bitrate baixo para 4K HDR.`; }
+    } else {
+      if (bitrateMbps > 30)      { bitrateClass = 'Remux / Entusiasta'; bitrateScore = 100; bitrateColor = '#a78bfa'; bitrateNote = 'Referência para 1080p.'; }
+      else if (bitrateMbps > 15) { bitrateClass = 'Alta Fidelidade';    bitrateScore = 90;  bitrateColor = '#10b981'; bitrateNote = '1080p de alta qualidade.'; }
+      else if (bitrateMbps > 8)  { bitrateClass = 'WEB Alta Fidelidade';bitrateScore = 70;  bitrateColor = '#3b82f6'; bitrateNote = 'Excelente 1080p.'; }
+      else if (bitrateMbps > 5)  { bitrateClass = 'WEB Médio';          bitrateScore = 50;  bitrateColor = '#f59e0b'; bitrateNote = 'Full HD padrão.'; }
+      else                       { bitrateClass = 'Comprimido';         bitrateScore = 30;  bitrateColor = '#ef4444'; bitrateNote = 'Bitrate econômico.'; }
+    }
+
+    // ---- 2. COR & PROFUNDIDADE ----
+    const bitDepth      = num(V.BitDepth || V.Bit_depth || '8');
+    const colorPrim     = V.ColorPrimaries || V.color_primaries || V.colour_primaries || '';
+    const chromaSub     = V.ChromaSubsampling || V.Chroma_subsampling || '4:2:0';
+    const transferChar  = V.transfer_characteristics || V.TransferCharacteristics || '';
+
+    let colorScore = 0;
+    const colorDetails = [];
+    if (bitDepth >= 10) { colorScore += 45; colorDetails.push({ ok: true,  text: `${bitDepth}-bit — gradientes suaves, essencial para HDR` }); }
+    else                { colorScore += 10; colorDetails.push({ ok: false, text: `${bitDepth}-bit — risco de banding em HDR` }); }
+    
+    if (colorPrim.includes('2020'))          { colorScore += 35; colorDetails.push({ ok: true,  text: 'BT.2020 — Gamut Amplo (WCG) detectado' }); }
+    else if (colorPrim.includes('P3'))       { colorScore += 25; colorDetails.push({ ok: true,  text: 'DCI-P3 — Cores de cinema' }); }
+    else                                     {                   colorDetails.push({ ok: false, text: 'BT.709 — Cores padrão (SDR)' }); }
+
+    if      (chromaSub.includes('4:4:4'))    { colorScore += 20; colorDetails.push({ ok: true,  text: '4:4:4 — Chroma Pleno' }); }
+    else if (chromaSub.includes('4:2:2'))    { colorScore += 15; colorDetails.push({ ok: true,  text: '4:2:2 — Ótimo Chroma' }); }
+    else                                     { colorScore += 10; colorDetails.push({ ok: false, text: '4:2:0 — Chroma Comprimido' }); }
+    
+    colorScore = Math.min(100, colorScore);
+    const colorColor = colorScore >= 80 ? '#10b981' : colorScore >= 55 ? '#3b82f6' : '#f59e0b';
+
+    // ---- 3. HDR ----
+    const hdrRaw     = V.HDR_Format || '';
+    const hdrProfile = V.HDR_Format_Profile || '';
+    const isDV       = hdrRaw.includes('Dolby Vision');
+    const isHDR10P   = hdrRaw.includes('HDR10+') || hdrRaw.includes('SMPTE ST 2094');
+    const isHDR10    = hdrRaw.includes('HDR10') || transferChar.includes('PQ');
+    const isHDR      = isDV || isHDR10P || isHDR10;
+    
+    let dvProfile = (hdrRaw.match(/Profile (\d+\.\d+|\d+)/i) || [])[1];
+    if (!dvProfile && hdrProfile) {
+      // Handle dvhe.08.06 format
+      const pMatch = hdrProfile.match(/(\d+)/);
+      if (pMatch) dvProfile = pMatch[0] === '08' ? '8.1' : (pMatch[0] === '05' ? '5.0' : pMatch[0]);
+    }
+    
+    const dvBL = hdrRaw.includes('BL+RPU') || (V.HDR_Format_Settings||'').includes('BL+RPU') ? 'BL+RPU' : '';
+
+    // MaxCLL / MaxFALL
+    const maxCLL  = num(V.MaxCLL || V.MaximumContentLightLevel || '0');
+    const maxFALL = num(V.MaxFALL || V.MaximumFrameAverageLightLevel || '0');
+    const masteringLum = V.MasteringDisplay_Luminance || V.Mastering_display_luminance || '';
+    const masterMax = num((masteringLum.match(/max:\s*([\d.]+)/i) || [])[1] || '0');
+    const masterMin = num((masteringLum.match(/min:\s*([\d.]+)/i) || [])[1] || '1');
+
+    let hdrScore = 0, hdrLabel = 'SDR', hdrNote = '', hdrColor = '#94a3b8';
+    if (isDV && isHDR10P) { 
+      hdrScore = 100; hdrLabel = 'DV + HDR10+'; hdrColor = '#fbbf24'; 
+      hdrNote = `Combo Premium: Dolby Vision ${dvProfile ? 'P'+dvProfile : ''} + HDR10+ dinâmico.`; 
+    }
+    else if (isDV) { 
+      hdrScore = 90; hdrLabel = 'Dolby Vision'; hdrColor = '#f59e0b'; 
+      hdrNote = `Dolby Vision ${dvProfile ? 'Profile '+dvProfile : ''} ${dvBL}. Metadados dinâmicos por frame.`; 
+    }
+    else if (isHDR10P) { 
+      hdrScore = 85; hdrLabel = 'HDR10+'; hdrColor = '#818cf8'; 
+      hdrNote = 'HDR10+ (ST 2094): Metadados dinâmicos por cena para tone mapping preciso.'; 
+    }
+    else if (isHDR10) { 
+      hdrScore = 65; hdrLabel = 'HDR10'; hdrColor = '#3b82f6'; 
+      hdrNote = 'HDR10 Padrão: Metadados estáticos. O display gerencia o tone mapping global.'; 
+    }
+    else { 
+      hdrScore = 15; hdrLabel = 'SDR'; hdrColor = '#94a3b8'; 
+      hdrNote = 'Conteúdo Standard Dynamic Range (SDR).'; 
+    }
+
+    const maxCLLNote = maxCLL > 0
+      ? `MaxCLL ${maxCLL} nits / MaxFALL ${maxFALL} nits — masterizado em ${masterMax} nits, negros em ${masterMin} cd/m²`
+      : 'Metadados de luminância não encontrados no stream.';
+
+    // ---- 4. HARDWARE MATCH (TCL 55C6K) ----
+    let hwScore = 0, hwColor = '#ef4444';
+    const hwFinds = [];
+
+    // 1. HDR support
+    if (isDV && TV.supportsDV)             { hwScore += 30; hwFinds.push({ ok: true,  text: `Dolby Vision Profile ${dvProfile} (Nativo)` }); }
+    else if (isHDR10P && TV.supportsHDRPlus){ hwScore += 25; hwFinds.push({ ok: true,  text: `HDR10+ Dinâmico (Nativo)` }); }
+    else if (isHDR10 && TV.supportsHDR10)  { hwScore += 15; hwFinds.push({ ok: true,  text: 'HDR10 Estático (Suportado)' }); }
+    else if (isHDR)                          { hwFinds.push({ ok: false, text: 'Metadados Dinâmicos (DV/HDR10+)' }); }
+    else                                     { hwFinds.push({ ok: false, text: 'High Dynamic Range (HDR)' }); }
+
+    // 2. MaxCLL vs TV peak
+    if (maxCLL > 0) {
+      if (maxCLL <= TV.peakNits) {
+        hwScore += 30;
+        hwFinds.push({ ok: true, text: `Brilho: ${maxCLL} nits (Abaixo do pico da TV)` });
+      } else {
+        hwScore += 12;
+        hwFinds.push({ ok: false, text: `Brilho: ${maxCLL} nits (Excede pico da TV)` });
+      }
+    } else {
+      hwFinds.push({ ok: false, text: 'Metadados de Luminância (MaxCLL)' });
+    }
+
+    // 3. Local dimming / Contrast
+    if (masterMin <= 0.01) {
+      hwScore += 20;
+      hwFinds.push({ ok: true, text: `Contraste: Negros Mini LED Profundos` });
+    } else if (masterMin <= 0.05) {
+      hwScore += 10;
+      hwFinds.push({ ok: true, text: `Contraste: Controle de Preto Sólido` });
+    } else {
+      hwFinds.push({ ok: false, text: 'Contraste: Controle Ultra-Black' });
+    }
+
+    // 4. Color gamut
+    if (colorPrim.includes('BT.2020')) {
+      hwScore += 20;
+      hwFinds.push({ ok: true, text: `Gama: BT.2020 (WCG Detectado)` });
+    } else {
+      hwFinds.push({ ok: false, text: 'Wide Color Gamut (BT.2020)' });
+    }
+
+    hwScore = Math.min(100, hwScore);
+    hwColor = hwScore >= 80 ? '#10b981' : hwScore >= 55 ? '#3b82f6' : hwScore >= 35 ? '#f59e0b' : '#ef4444';
+
+    // ---- VERDICT ----
+    const avg = Math.round((bitrateScore + colorScore + hdrScore + hwScore) / 4);
+    let verdict, vColor, vNote;
+    if      (avg >= 88) { verdict = 'Referência';  vColor = '#a78bfa'; vNote = 'Qualidade de disco físico UHD. Extrai tudo do hardware.'; }
+    else if (avg >= 72) { verdict = 'Alta';         vColor = '#10b981'; vNote = 'Excelente para consumo diário. Diferença perceptível.'; }
+    else if (avg >= 56) { verdict = 'Média-Alta';   vColor = '#3b82f6'; vNote = 'Boa experiência. A TV compensa as limitações do encode.'; }
+    else if (avg >= 40) { verdict = 'Média';        vColor = '#f59e0b'; vNote = 'Sólido para assistir. Limitado por fonte ou bitrate.'; }
+    else                { verdict = 'Baixa';        vColor = '#ef4444'; vNote = 'Qualidade comprometida pela fonte ou compressão forte.'; }
+
+    return {
+      // bitrate
+      bitrateMbps, bitrateClass, bitrateScore, bitrateNote, bitrateColor,
+      width, height, fps, codec, fileSizeGB, is4K,
+      // color
+      bitDepth, colorPrim, chromaSub, colorScore, colorDetails, colorColor,
+      // hdr
+      isDV, isHDR10P, isHDR10, hdrLabel, hdrScore, hdrNote, hdrColor,
+      dvProfile, dvBL, maxCLL, maxFALL, masterMax, masterMin, maxCLLNote,
+      // hardware
+      hwScore, hwFinds, hwColor,
+      // verdict
+      avg, verdict, vColor, vNote,
+    };
+  }
+
+  function renderExpertBlock(a) {
+    const pct = s => `${Math.round(s)}%`;
+    const findHtml = (finds) => finds.map(f => `
+      <div class="hw-finding">
+        ${f.ok 
+          ? `<div class="dot" style="background:var(--green)"></div>` 
+          : `<span style="color:var(--red);font-size:0.7rem;font-weight:700;line-height:1;min-width:10px;text-align:center">✕</span>`}
+        <span style="${f.ok ? '' : 'color:var(--muted); opacity:0.8'}">${esc(f.text)}</span>
+      </div>`).join('');
+
+    return `
+    <div class="expert-block">
+      <div class="expert-header">
+        <span class="expert-header-title">Veredito de Engenharia</span>
+        <span class="verdict-pill" style="background:${a.vColor}22;border:1px solid ${a.vColor}55;color:${a.vColor}">${a.verdict}</span>
+      </div>
+
+      <div class="expert-grid">
+        <!-- Bitrate -->
+        <div class="expert-criterion">
+          <div class="crit-label">Eficiência de Bitrate</div>
+          <div class="crit-value">
+            <span style="color:${a.bitrateColor}">${a.bitrateClass}</span>
+            <span style="color:var(--muted);font-size:0.72rem;font-weight:400">${a.bitrateMbps.toFixed(1)} Mbps</span>
+          </div>
+          <div class="score-bar-wrap">
+            <div class="score-bar-fill" style="width:${pct(a.bitrateScore)};background:${a.bitrateColor}"></div>
+          </div>
+          <div class="crit-note">${esc(a.bitrateNote)}</div>
+          <div class="crit-note" style="margin-top:4px;color:var(--muted)">
+            ${a.width}×${a.height} · ${a.codec} · ${a.fps} fps
+            ${a.fileSizeGB > 0 ? `· ${a.fileSizeGB.toFixed(1)} GB` : ''}
+          </div>
+        </div>
+
+        <!-- Cor / Profundidade -->
+        <div class="expert-criterion">
+          <div class="crit-label">Profundidade &amp; Cor</div>
+          <div class="crit-value">
+            <span style="color:${a.colorColor}">${a.bitDepth}-bit · ${a.colorPrim || 'N/A'}</span>
+          </div>
+          <div class="score-bar-wrap">
+            <div class="score-bar-fill" style="width:${pct(a.colorScore)};background:${a.colorColor}"></div>
+          </div>
+          <div class="hw-findings">${findHtml(a.colorDetails)}</div>
+        </div>
+
+        <!-- HDR -->
+        <div class="expert-criterion">
+          <div class="crit-label">Implementação HDR</div>
+          <div class="crit-value">
+            <span style="color:${a.hdrColor}">${a.hdrLabel}</span>
+            ${a.dvProfile ? `<span style="color:var(--muted);font-size:0.7rem">Profile ${a.dvProfile}</span>` : ''}
+          </div>
+          <div class="score-bar-wrap">
+            <div class="score-bar-fill" style="width:${pct(a.hdrScore)};background:${a.hdrColor}"></div>
+          </div>
+          <div class="crit-note">${esc(a.hdrNote)}</div>
+          ${a.maxCLL > 0 ? `<div class="crit-note" style="margin-top:4px">${esc(a.maxCLLNote)}</div>` : ''}
+        </div>
+
+        <!-- Hardware -->
+        <div class="expert-criterion">
+          <div class="crit-label">Compatibilidade — ${esc(TV.name)}</div>
+          <div class="crit-value" style="color:${a.hwColor}">${a.hwScore}% aproveitado</div>
+          <div class="score-bar-wrap">
+            <div class="score-bar-fill" style="width:${pct(a.hwScore)};background:${a.hwColor}"></div>
+          </div>
+          <div class="hw-findings">${findHtml(a.hwFinds)}</div>
+        </div>
+      </div>
+
+      <!-- Score summary bar -->
+      <div class="verdict-summary">
+        <div>
+          <div class="verdict-text" style="margin-bottom:6px">Score geral: ${a.avg}/100</div>
+          <div class="verdict-score-row">
+            <div class="verdict-score-seg" title="Bitrate">
+              <div class="verdict-score-seg-fill" style="width:${pct(a.bitrateScore)};background:${a.bitrateColor}"></div>
+            </div>
+            <div class="verdict-score-seg" title="Cor">
+              <div class="verdict-score-seg-fill" style="width:${pct(a.colorScore)};background:${a.colorColor}"></div>
+            </div>
+            <div class="verdict-score-seg" title="HDR">
+              <div class="verdict-score-seg-fill" style="width:${pct(a.hdrScore)};background:${a.hdrColor}"></div>
+            </div>
+            <div class="verdict-score-seg" title="Hardware">
+              <div class="verdict-score-seg-fill" style="width:${pct(a.hwScore)};background:${a.hwColor}"></div>
+            </div>
+          </div>
+          <div class="verdict-text" style="margin-top:4px;font-size:0.62rem;color:#4b5563">
+            Bitrate · Cor/Profundidade · HDR · Hardware
+          </div>
+        </div>
+        <div>
+          <div class="verdict-text" style="text-align:right;font-size:0.68rem;color:var(--muted);max-width:200px">${esc(a.vNote)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  // ================================================================
+  // AUDIO LOGIC
+  // ================================================================
+  function isAtmosTrack(t) {
+    if (!t) return false;
+    return (t.Format_AdditionalFeatures || '').includes('JOC') ||
+           (t.Format_Commercial_IfAny   || '').toLowerCase().includes('atmos') ||
+           (t.Format                    || '').toLowerCase().includes('atmos');
+  }
+
+  function isDTSMATrack(t) {
+    if (!t) return false;
+    return (t.Format || '').includes('DTS') &&
+           ((t.Format_AdditionalFeatures || '').includes('XLL') ||
+            (t.Format_Commercial_IfAny   || '').includes('MA'));
+  }
+
+  function trackScore(t) {
+    if (!t) return 0;
+    const ch = parseInt(t.Channels || t['Channel(s)'] || '0');
+    let s = ch;
+    if (isAtmosTrack(t)) s += 1000;
+    if (isDTSMATrack(t)) s += 500;
+    if ((t.Format_Commercial_IfAny || '').includes('TrueHD')) s += 400;
+    if (ch >= 8) s += 50;
+    return s;
+  }
+
+  function pickBestAudio(tracks) {
+    if (!tracks || tracks.length === 0) return null;
+    return tracks.reduce((b, t) => trackScore(t) > trackScore(b) ? t : b, tracks[0]);
+  }
+
+  function renderAudioRow(t, isBest) {
+    const ch    = t.Channels || t['Channel(s)'] || '?';
+    const lang  = (t.Language || 'und').toUpperCase();
+    const title = t.Title || t.Format_Commercial_IfAny || t.Format || '—';
+    const rate  = t.BitRate ? `${(t.BitRate / 1000).toFixed(0)}k` : '';
+    const atmos = isAtmosTrack(t) ? ' 🔊' : '';
+    return `
+      <div class="audio-row ${isBest ? 'best' : ''}">
+        <span class="audio-lang">${lang}</span>
+        <span class="audio-title">${esc(title)}${atmos}</span>
+        <span class="audio-ch">${ch}ch</span>
+        <span class="audio-ch" style="color:var(--muted)">${rate}</span>
+        ${isBest ? '<span class="badge badge-dv" style="padding:2px 7px;font-size:0.6rem">★</span>' : ''}
+      </div>`;
+  }
+
+  // ================================================================
+  // EPISODE PICKER
+  // ================================================================
+  async function openEpisodePicker(series) {
+    const modal = document.getElementById('ep-modal');
+    const body  = document.getElementById('ep-modal-body');
+    modal.classList.add('active');
+    body.innerHTML = `<div class="ep-modal-title">${esc(series.name)}</div><div class="loader"><div class="spinner"></div></div>`;
+
+    let eps = [], err = null;
+    try {
+      const r = await fetch(`${API_BASE}/api/episodes?seriesId=${series.id}`);
+      if (r.ok) eps = await r.json(); else err = await r.text();
+    } catch(e) { err = e.message; }
+
+    if (err || !eps?.length) {
+      body.innerHTML = `<div class="ep-modal-title">${esc(series.name)}</div>
+        <p style="color:var(--muted);font-size:0.9rem">${err || 'Nenhum episódio com arquivo disponível.'}</p>`;
+      return;
+    }
+
+    const seasons = {};
+    eps.forEach(ep => { const s = ep.season_number || 0; (seasons[s] = seasons[s] || []).push(ep); });
+
+    const html = Object.entries(seasons).sort(([a],[b]) => a - b).map(([sn, list]) => `
+      <div class="season-block">
+        <div class="season-label">Temporada ${sn}</div>
+        <div class="episode-list">
+          ${list.map(ep => `
+            <button class="episode-btn" onclick="openEpDetail('${ep.id}','${escA(series.name)} — S${pad(ep.season_number)}E${pad(ep.episode_index)} ${escA(ep.name)}','${escA(ep.path)}','${series.id}')">
+              <span class="ep-num">E${ep.episode_index}</span>
+              <span>${esc(ep.name)}</span>
+            </button>`).join('')}
+        </div>
+      </div>`).join('');
+
+    body.innerHTML = `<div class="ep-modal-title">${esc(series.name)}</div>${html}`;
+  }
+
+  async function openEpDetail(epId, label, path, seriesId) {
+    closeEpModal();
+    // Use seriesId as the main ID for the 'movie' object to easily fetch series info or go back
+    const movie = { id: seriesId, name: label, overview: '', type: 'Episode', path, has_image: false };
+    await openDetail(movie);
+  }
+
+  // ================================================================
+  // MEDIAINFO RAW FORMAT
+  // ================================================================
+  function fmtRaw(info) {
+    let out = '';
+    (info?.media?.track || []).forEach(t => {
+      out += `[${t['@type']}${t['@typeorder'] ? ' ' + t['@typeorder'] : ''}]\n`;
+      if (t['@type'] === 'General') {
+        out += `Format     : ${t.Format || '?'}\n`;
+        out += `Duration   : ${fmtDur(t.Duration)}\n`;
+        out += `Size       : ${t.FileSize ? (num(t.FileSize)/1e9).toFixed(2)+' GB' : '?'}\n`;
+      } else if (t['@type'] === 'Video') {
+        out += `Codec      : ${t.Format || '?'}${t.Format_Profile ? ' '+t.Format_Profile : ''}\n`;
+        out += `Resolution : ${t.Width}×${t.Height}  ${t.FrameRate} fps\n`;
+        out += `Bitrate    : ${t.BitRate ? (num(t.BitRate)/1e6).toFixed(2)+' Mbps' : '?'}\n`;
+        out += `Bit depth  : ${t.BitDepth || '?'}-bit  ${t.ChromaSubsampling || ''}\n`;
+        out += `Color      : ${t.ColorPrimaries || '?'} / ${t.transfer_characteristics || t.TransferCharacteristics || '?'}\n`;
+        if (t.HDR_Format) out += `HDR        : ${t.HDR_Format}\n`;
+        if (t.MaxCLL)     out += `MaxCLL     : ${t.MaxCLL} nits\n`;
+        if (t.MaxFALL)    out += `MaxFALL    : ${t.MaxFALL} nits\n`;
+        if (t.MasteringDisplay_Luminance) out += `Mastering  : ${t.MasteringDisplay_Luminance}\n`;
+      } else if (t['@type'] === 'Audio') {
+        const lang = (t.Language || 'und').toUpperCase();
+        out += `Language   : ${lang}`;
+        if (t.Title) out += `  (${t.Title})`;
+        out += '\n';
+        out += `Format     : ${t.Format || '?'}`;
+        if (t.Format_Commercial_IfAny) out += `  — ${t.Format_Commercial_IfAny}`;
+        if (t.Format_AdditionalFeatures) out += `  [${t.Format_AdditionalFeatures}]`;
+        out += '\n';
+        out += `Channels   : ${t.Channels || t['Channel(s)'] || '?'}ch  `;
+        out += `Bitrate : ${t.BitRate ? (num(t.BitRate)/1000).toFixed(0)+' kbps' : '?'}\n`;
+      }
+      out += '\n';
+    });
+    return out;
+  }
+
+  function fmtDur(sec) {
+    if (!sec) return '?';
+    const s = parseFloat(sec);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return `${h}h ${m}m`;
+  }
+
+  // ================================================================
+  // UTILS
+  // ================================================================
+  function esc(s)  { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function escA(s) { return String(s||'').replace(/'/g,"\\'"); }
+
+  function copyRawMediaInfo(btn) {
+    if (!lastRawMediaInfo) return;
+    const text = JSON.stringify(lastRawMediaInfo, null, 2);
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    btn.classList.add('copied');
+    const orig = btn.innerHTML;
+    btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Copiado!`;
+    setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2000);
+  }
+  function pad(n)  { return String(n||0).padStart(2,'0'); }
+
+  function closeDetailModal(e) {
+    if (e && e.target !== document.getElementById('detail-modal')) return;
+    document.getElementById('detail-modal').classList.remove('active');
+  }
+  function closeEpModal(e) {
+    if (e && e.target !== document.getElementById('ep-modal')) return;
+    document.getElementById('ep-modal').classList.remove('active');
+  }
+
+  function backToEpisodes(seriesId) {
+    const modal = document.getElementById('detail-modal');
+    modal.classList.remove('active');
+    const series = allMovies.find(m => m.id === seriesId);
+    if (series) openEpisodePicker(series);
+  }
+
+  fetchMovies();
+  </script>
+</body>
+</html>

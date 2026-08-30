@@ -400,6 +400,9 @@
         async function fetchData() {
             try {
                 const response = await fetch('/cleanup');
+                if (!response.ok) {
+                    throw new Error(await response.text());
+                }
                 allData = await response.json();
                 render();
             } catch (error) {

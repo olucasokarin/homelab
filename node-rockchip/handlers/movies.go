@@ -115,16 +115,6 @@ func MoviesHandler(w http.ResponseWriter, r *http.Request) {
 
   log.Printf("[LIBRARY] Fetching movie list from Jellyfin...")
   start := time.Now()
-  resp, err := http.Get(url)
-  elapsed := time.Since(start)
-  if err != nil {
-    log.Printf("[LIBRARY] ❌ Error fetching from Jellyfin after %v: %v", elapsed, err)
-    http.Error(w, fmt.Sprintf("Error fetching Jellyfin items: %v", err), http.StatusInternalServerError)
-    return
-  }
-  log.Printf("[LIBRARY] ✅ Fetch completed in %v", elapsed)
-  defer resp.Body.Close()
-
   var data struct {
     Items []struct {
       Id        string            `json:"Id"`
@@ -135,11 +125,13 @@ func MoviesHandler(w http.ResponseWriter, r *http.Request) {
       ImageTags map[string]string `json:"ImageTags"`
     } `json:"Items"`
   }
-
-  if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-    http.Error(w, fmt.Sprintf("Error decoding Jellyfin data: %v", err), http.StatusInternalServerError)
+  if err := getJSON(url, &data); err != nil {
+    elapsed := time.Since(start)
+    log.Printf("[LIBRARY] ❌ Error fetching from Jellyfin after %v: %v", elapsed, err)
+    http.Error(w, fmt.Sprintf("Error fetching Jellyfin items: %v", err), http.StatusInternalServerError)
     return
   }
+  log.Printf("[LIBRARY] ✅ Fetch completed in %v", time.Since(start))
 
   // Deduplicate by filename (alternate mount points) and Name (case-insensitive)
   seenFile := make(map[string]bool)
@@ -202,16 +194,6 @@ func EpisodesHandler(w http.ResponseWriter, r *http.Request) {
 
   log.Printf("[EPISODES] Fetching episodes for series: %s", seriesId)
   start := time.Now()
-  resp, err := http.Get(url)
-  elapsed := time.Since(start)
-  if err != nil {
-    log.Printf("[EPISODES] ❌ Error fetching episodes after %v: %v", elapsed, err)
-    http.Error(w, fmt.Sprintf("Error fetching episodes: %v", err), http.StatusInternalServerError)
-    return
-  }
-  log.Printf("[EPISODES] ✅ Episodes fetched in %v", elapsed)
-  defer resp.Body.Close()
-
   var data struct {
     Items []struct {
       Id                string `json:"Id"`
@@ -221,11 +203,13 @@ func EpisodesHandler(w http.ResponseWriter, r *http.Request) {
       Path              string `json:"Path"`
     } `json:"Items"`
   }
-
-  if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-    http.Error(w, fmt.Sprintf("Error decoding episodes: %v", err), http.StatusInternalServerError)
+  if err := getJSON(url, &data); err != nil {
+    elapsed := time.Since(start)
+    log.Printf("[EPISODES] ❌ Error fetching episodes after %v: %v", elapsed, err)
+    http.Error(w, fmt.Sprintf("Error fetching episodes: %v", err), http.StatusInternalServerError)
     return
   }
+  log.Printf("[EPISODES] ✅ Episodes fetched in %v", time.Since(start))
 
   var episodes []EpisodeItem
   for _, ep := range data.Items {

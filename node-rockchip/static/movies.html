@@ -599,10 +599,13 @@
   async function fetchMovies() {
     try {
       const r = await fetch(`${API_BASE}/api/movies`);
+      if (!r.ok) {
+        throw new Error(await r.text());
+      }
       allMovies = await r.json();
       renderMovies();
     } catch(e) {
-      document.getElementById('loading').innerHTML = '<p style="color:var(--red);padding:2rem">Erro ao carregar. Backend offline?</p>';
+      document.getElementById('loading').innerHTML = `<p style="color:var(--red);padding:2rem">Erro ao carregar biblioteca: ${esc(e.message)}</p>`;
     } finally {
       document.getElementById('loading').style.display = 'none';
     }

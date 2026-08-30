@@ -161,14 +161,8 @@ func CleanupHandler(w http.ResponseWriter, r *http.Request) {
 
 func getRadarrMovies() ([]map[string]interface{}, error) {
 	url := fmt.Sprintf("%s/api/v3/movie?apiKey=%s", config.Config.RadarrURL, config.Config.RadarrKey)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var movies []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&movies); err != nil {
+	if err := getJSON(url, &movies); err != nil {
 		return nil, err
 	}
 	return movies, nil
@@ -176,14 +170,8 @@ func getRadarrMovies() ([]map[string]interface{}, error) {
 
 func getSonarrSeries() ([]map[string]interface{}, error) {
 	url := fmt.Sprintf("%s/api/v3/series?apiKey=%s", config.Config.SonarrURL, config.Config.SonarrKey)
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var series []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&series); err != nil {
+	if err := getJSON(url, &series); err != nil {
 		return nil, err
 	}
 	return series, nil
@@ -192,14 +180,11 @@ func getSonarrSeries() ([]map[string]interface{}, error) {
 func getJellyfinWatchedItems() (map[string]time.Time, error) {
 	// First, fetch the system users to find a valid one
 	usersUrl := fmt.Sprintf("%s/Users?api_key=%s", config.Config.JellyfinURL, config.Config.JellyfinKey)
-	resp, err := http.Get(usersUrl)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var users []map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&users); err != nil || len(users) == 0 {
+	if err := getJSON(usersUrl, &users); err != nil || len(users) == 0 {
+		if err != nil {
+			return nil, err
+		}
 		return nil, fmt.Errorf("no users found in Jellyfin")
 	}
 
@@ -220,12 +205,6 @@ func getJellyfinWatchedItems() (map[string]time.Time, error) {
 	// Now fetch items for that user with Recursive=true and IsPlayed=true
 	// We need UserData to get LastPlayedDate
 	itemsUrl := fmt.Sprintf("%s/Users/%s/Items?api_key=%s&Recursive=true&Fields=Path,UserData&IsPlayed=true", config.Config.JellyfinURL, userId, config.Config.JellyfinKey)
-	resp, err = http.Get(itemsUrl)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
 	var data struct {
 		Items []struct {
 			Path     string `json:"Path"`
@@ -234,8 +213,7 @@ func getJellyfinWatchedItems() (map[string]time.Time, error) {
 			} `json:"UserData"`
 		} `json:"Items"`
 	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+	if err := getJSON(itemsUrl, &data); err != nil {
 		return nil, err
 	}
 

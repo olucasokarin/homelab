@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=olucas
+User=root
 WorkingDirectory=/home/olucas
 ExecStart=/home/olucas/rockchip-node-linux-arm64
 Restart=always

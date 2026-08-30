@@ -209,7 +209,6 @@
         <button class="log-btn" onclick="fetchLogs('bazarr')">Bazarr</button>
         <button class="log-btn" onclick="fetchLogs('prowlarr')">Prowlarr</button>
         <button class="log-btn" onclick="fetchLogs('transmission')">Transmission</button>
-        <button class="log-btn" onclick="fetchLogs('qbittorrent')">qbt</button>
         <button class="log-btn" onclick="fetchLogs('rockchip-bot')">Rockchip Bot</button>
         <button class="log-btn" onclick="fetchLogs('rockchip-node')">Rockchip Node</button>
         <button class="log-btn" onclick="fetchLogs('telegram-bot-api')">Telegram API (Docker)</button>
@@ -286,7 +285,7 @@
       if (!currentService) return;
       document.querySelectorAll('#log-buttons .log-btn').forEach(btn => {
         if (btn.id === 'auto-refresh-btn') return;
-        btn.classList.toggle('active', btn.textContent.toLowerCase() === currentService.toLowerCase() || (btn.textContent.trim() === 'qbt' && currentService === 'qbittorrent') || (btn.textContent.trim() === 'Torrent Sniffer' && currentService === 'torrent-sniffer'));
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === currentService.toLowerCase() || (btn.textContent.trim() === 'Torrent Sniffer' && currentService === 'torrent-sniffer'));
       });
       const viewer = document.getElementById('log-viewer');
       const lines = parseInt(document.getElementById('lines-input').value) || 100;

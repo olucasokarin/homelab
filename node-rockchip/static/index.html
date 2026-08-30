@@ -453,6 +453,55 @@
       transform: scale(1.1);
     }
 
+    .stop-btn-small {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+    }
+
+    .stop-btn-small:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    .start-btn-small {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--accent-green);
+      border-radius: 4px;
+      padding: 2px 8px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-transform: none;
+      letter-spacing: normal;
+      font-weight: 600;
+      margin-left: 5px;
+    }
+
+    .start-btn-small:hover {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: scale(1.05);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
+
     /* Custom Alert Modal */
     .alert-overlay {
       position: fixed;
@@ -615,22 +664,6 @@
         </div>
       </a>
 
-      <a href="#" data-port="8080" data-service="qbittorrent" target="_blank" class="card" referrerpolicy="no-referrer">
-        <div class="status-indicator status-checking">
-          <span class="status-dot"></span>
-          <span class="status-text">Sondando</span>
-        </div>
-        <div class="card-icon icon-blue">🌊</div>
-        <div class="card-info">
-          <h3>qBittorrent</h3>
-          <p>Gerenciamento de Torrents</p>
-        </div>
-        <div class="card-actions">
-          <div class="stop-btn" onclick="requestStop(event, 'qbittorrent')" title="Parar Serviço">⏹</div>
-          <div class="restart-btn" onclick="requestRestart(event, 'qbittorrent')" title="Reiniciar Serviço">↺</div>
-        </div>
-      </a>
-
       <a href="/sys.html" data-service="rockchip-node" target="_self" class="card">
         <div class="status-indicator status-online">
           <span class="status-dot"></span>
@@ -659,7 +692,13 @@
       </a>
     </div>
 
-    <div class="section-title">Arr Stack</div>
+    <div class="section-title">
+      Arr Stack
+      <div style="display: flex; gap: 8px; margin-left: 5px;">
+        <button onclick="requestStartArrStack(event)" class="start-btn-small" title="Iniciar Arr Stack">▶ Iniciar Stack</button>
+        <button onclick="requestStopArrStack(event)" class="stop-btn-small" title="Desligar Arr Stack">⏹ Parar Stack</button>
+      </div>
+    </div>
     <div class="grid">
       <a href="#" data-port="8989" data-service="sonarr" target="_blank" class="card" referrerpolicy="no-referrer">
         <div class="status-indicator status-checking">
@@ -1024,12 +1063,97 @@
       }
     }
 
+    async function requestStopArrStack(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (!confirm("⚠️ Deseja PARAR todo o Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)?")) {
+        return;
+      }
+
+      // Feedback visual nos cards afetados
+      const arrServices = ['sonarr', 'radarr', 'bazarr', 'prowlarr'];
+      arrServices.forEach(svc => {
+        const card = document.querySelector(`.card[data-service="${svc}"]`);
+        if (card) {
+          const indicator = card.querySelector('.status-indicator');
+          const text = card.querySelector('.status-text');
+          if (indicator && text) {
+            indicator.classList.remove('status-online', 'status-offline');
+            indicator.classList.add('status-checking');
+            text.innerText = 'Parando...';
+          }
+        }
+      });
+
+      try {
+        const response = await fetch(`http://${currentHost}:5000/stop?service=arr-stack`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          showAlert(`⏹ Sucesso`, `Arr Stack parado com sucesso.`);
+        } else {
+          const err = await response.text();
+          showAlert(`❌ Erro`, `Erro ao parar Arr Stack: ` + err);
+        }
+      } catch (e) {
+        showAlert(`❌ Erro`, `Erro de conexão ao tentar parar Arr Stack.`);
+      } finally {
+        updateAllHealth();
+      }
+    }
+
+    async function requestStartArrStack(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+
+      if (!confirm("⚠️ Deseja INICIAR todo o Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)?")) {
+        return;
+      }
+
+      // Feedback visual nos cards afetados
+      const arrServices = ['sonarr', 'radarr', 'bazarr', 'prowlarr'];
+      arrServices.forEach(svc => {
+        const card = document.querySelector(`.card[data-service="${svc}"]`);
+        if (card) {
+          const indicator = card.querySelector('.status-indicator');
+          const text = card.querySelector('.status-text');
+          if (indicator && text) {
+            indicator.classList.remove('status-online', 'status-offline');
+            indicator.classList.add('status-checking');
+            text.innerText = 'Iniciando...';
+          }
+        }
+      });
+
+      try {
+        const response = await fetch(`http://${currentHost}:5000/start?service=arr-stack`, {
+          method: 'POST'
+        });
+
+        if (response.ok) {
+          showAlert(`▶ Sucesso`, `Arr Stack iniciado com sucesso.`);
+        } else {
+          const err = await response.text();
+          showAlert(`❌ Erro`, `Erro ao iniciar Arr Stack: ` + err);
+        }
+      } catch (e) {
+        showAlert(`❌ Erro`, `Erro de conexão ao tentar iniciar Arr Stack.`);
+      } finally {
+        updateAllHealth();
+      }
+    }
+
     async function requestStopAll(event) {
       event.preventDefault();
       const services = [
         { name: 'arr-stack', label: 'Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)' },
         { name: 'transmission', label: 'Transmission' },
-        { name: 'qbittorrent', label: 'qBittorrent' },
         { name: 'torrent-sniffer', label: 'Torrent Sniffer' },
         { name: 'rockchip-bot', label: 'TeleBot Downloader' },
       ];
@@ -1063,7 +1187,6 @@
       const services = [
         { name: 'arr-stack', label: 'Arr Stack (Sonarr, Radarr, Bazarr, Prowlarr)' },
         { name: 'transmission', label: 'Transmission' },
-        { name: 'qbittorrent', label: 'qBittorrent' },
         { name: 'torrent-sniffer', label: 'Torrent Sniffer' },
         { name: 'rockchip-bot', label: 'TeleBot Downloader' },
       ];

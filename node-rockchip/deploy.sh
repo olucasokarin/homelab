@@ -27,7 +27,10 @@ echo "🚀 Enviando pacote para $SERVER_IP..."
 scp rockchip-node-deploy.tar.gz $SERVER_IP:~/
 
 if [ $? -eq 0 ]; then
-    ssh -t $SERVER_IP "sudo systemctl stop rockchip-node; \
+    ssh -t $SERVER_IP "sudo mkdir -p /etc/systemd/system/rockchip-node.service.d; \
+                                  printf '[Service]\nEnvironmentFile=/home/olucas/.env\n' | sudo tee /etc/systemd/system/rockchip-node.service.d/override.conf >/dev/null; \
+                                  sudo systemctl daemon-reload; \
+                                  sudo systemctl stop rockchip-node; \
                                   tar -xzf rockchip-node-deploy.tar.gz; \
                                   chmod +x rockchip-node-linux-arm64; \
                                   sudo systemctl start rockchip-node; \

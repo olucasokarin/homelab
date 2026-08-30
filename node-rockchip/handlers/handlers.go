@@ -149,6 +149,24 @@ func RestartHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Special group: restart the entire arr stack
+	if service == "arr-stack" {
+		log.Println("Restarting entire arr-stack via docker compose...")
+		cmd := exec.Command("docker", "compose", "-f", "/home/olucas/arr-stack/docker-compose.yml", "restart")
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			cmd = exec.Command("docker-compose", "-f", "/home/olucas/arr-stack/docker-compose.yml", "restart")
+			out, err = cmd.CombinedOutput()
+		}
+		if err != nil {
+			http.Error(w, fmt.Sprintf("Failed to restart arr-stack: %v\nOutput: %s", err, string(out)), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprint(w, `{"status":"restarted", "service":"arr-stack"}`)
+		return
+	}
+
 	validServices := map[string]bool{
 		"jellyfin":         true,
 		"radarr":           true,
@@ -355,4 +373,36 @@ func StartHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	fmt.Fprintf(w, `{"status":"started", "service":"%s"}`, service)
+}
+
+func QbtPauseHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	log.Println("Pausing all qBittorrent torrents...")
+	resp, err := http.Post("http://localhost:8080/api/v2/torrents/pause?hashes=all", "application/x-www-form-urlencoded", nil)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to pause torrents: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, `{"status":"paused"}`)
+}
+
+func QbtResumeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	log.Println("Resuming all qBittorrent torrents...")
+	resp, err := http.Post("http://localhost:8080/api/v2/torrents/resume?hashes=all", "application/x-www-form-urlencoded", nil)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to resume torrents: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, `{"status":"resumed"}`)
 }

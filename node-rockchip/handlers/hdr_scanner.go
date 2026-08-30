@@ -133,23 +133,15 @@ func HDRScanHandler(w http.ResponseWriter, r *http.Request) {
 
   log.Println("[HDR-SCAN] Fetching movie list from Jellyfin...")
   start := time.Now()
-  resp, err := http.Get(url)
-  if err != nil {
-    log.Printf("[HDR-SCAN] ❌ Error fetching Jellyfin: %v", err)
-    http.Error(w, fmt.Sprintf("Error fetching Jellyfin items: %v", err), http.StatusInternalServerError)
-    return
-  }
-  defer resp.Body.Close()
-
   var data struct {
     Items []struct {
       Name string `json:"Name"`
       Path string `json:"Path"`
     } `json:"Items"`
   }
-
-  if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
-    http.Error(w, fmt.Sprintf("Error decoding Jellyfin data: %v", err), http.StatusInternalServerError)
+  if err := getJSON(url, &data); err != nil {
+    log.Printf("[HDR-SCAN] ❌ Error fetching Jellyfin: %v", err)
+    http.Error(w, fmt.Sprintf("Error fetching Jellyfin items: %v", err), http.StatusInternalServerError)
     return
   }
 

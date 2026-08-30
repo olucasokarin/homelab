@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"rockchip-node/config"
 	"rockchip-node/handlers"
 )
 
@@ -34,6 +35,8 @@ func main() {
 	mux.HandleFunc("/api/ffmpeg/logs", handlers.Cors(handlers.FFmpegLogsHandler))
 	mux.HandleFunc("/api/hdr/scan", handlers.Cors(handlers.HDRScanHandler))
 	mux.HandleFunc("/api/iohealth", handlers.Cors(handlers.IOHealthHandler))
+	mux.HandleFunc("/api/qbittorrent/pause", handlers.Cors(handlers.QbtPauseHandler))
+	mux.HandleFunc("/api/qbittorrent/resume", handlers.Cors(handlers.QbtResumeHandler))
 
 	// Static Dashboard
 	fs := http.FileServer(http.Dir("static"))
@@ -48,6 +51,9 @@ func main() {
 	fmt.Println("  [POST]  /restart  → Restart Services")
 	fmt.Println("  [POST]  /reboot   → System Reboot")
 	fmt.Println("  [VIEW]  /         → Dashboard UI")
+	fmt.Printf("  [CFG]   jellyfin=%s radarr=%s sonarr=%s keys_set=%v\n",
+		config.Config.JellyfinURL, config.Config.RadarrURL, config.Config.SonarrURL,
+		config.Config.JellyfinKey != "" && config.Config.RadarrKey != "" && config.Config.SonarrKey != "")
 	fmt.Println()
 	
 	log.Fatal(http.ListenAndServe(addr, mux))
